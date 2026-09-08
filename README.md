@@ -131,4 +131,5 @@ See `docs/narly-behavior.md` for full hardware details. Key components:
 ---
 
 ## License
-MIT
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2025-2026 Diagram.
