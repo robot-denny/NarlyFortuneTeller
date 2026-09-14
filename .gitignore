@@ -8,3 +8,6 @@ __pycache__/
 *.sqlite3
 *.wav
 .DS_Store
+
+# Toolkit scratch — disposable, never committed
+_scratch/

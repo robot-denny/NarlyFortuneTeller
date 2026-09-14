@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "skills": {
+    "bdd-principles": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/bdd-principles/SKILL.md",
+      "computedHash": "c91f97e89b8ee1c837fde2184efb0c0f8c151f54fa239dfbb51a7e3fe2479480"
+    },
+    "code-review": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/code-review/SKILL.md",
+      "computedHash": "cea8cf600dc4b685558b5d408dce6c42021441d2ade8d5318dbf2dd440c2c453"
+    },
+    "commit-message": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/commit-message/SKILL.md",
+      "computedHash": "72841d1b893d0447073e131a29ce258f63b310d1d546885edc5295ef245db462"
+    },
+    "design-system-authoring": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/design-system-authoring/SKILL.md",
+      "computedHash": "2bfaf0288856b33c8dc0050972fc6a39cb767b3bbc4fa5a959a03f16d944debf"
+    },
+    "explore": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/explore/SKILL.md",
+      "computedHash": "31b5ce9e35cfa266dfb1ed8768886156b0952091b6fa18daae6c15f66efeef9f"
+    },
+    "feature": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/feature/SKILL.md",
+      "computedHash": "084af4cdba31513ffef9a81204c9651841f205f372071310fbe497f30b039dde"
+    },
+    "implement-step": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/implement-step/SKILL.md",
+      "computedHash": "064cc7a606d27faa1caa6c5f4a73a1a119839a54bf798c779e043fcfb1caa61e"
+    },
+    "memory-discipline": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/memory-discipline/SKILL.md",
+      "computedHash": "948e164bbafeb827c6ba35f45f4fab175afe9ae64545f827819e04c2806cd883"
+    },
+    "plan": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/plan/SKILL.md",
+      "computedHash": "bd3b44b95b9eb374ac227767d6bf95e84bb1aab877bcaee54b8012e395438260"
+    },
+    "retrofit": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/retrofit/SKILL.md",
+      "computedHash": "55179d038bc262b71f425d1021cc3b0523ad4a6b539feccf3c7aa9437536e128"
+    },
+    "reviewer-discipline": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/reviewer-discipline/SKILL.md",
+      "computedHash": "86a230736076622e9754ceae88f07dc6f666f1efb5088e26fcaa4203078b4408"
+    },
+    "security-review-rules": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/security-review-rules/SKILL.md",
+      "computedHash": "2223818eb01b6c8d006d5d848036b917bb896263bf209c9742bf03c5b8d6fb24"
+    },
+    "setup": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/setup/SKILL.md",
+      "computedHash": "a2ce1af3bc9f599b9a06ef3dcd758777d0a5b715bb5d81690954d0fa1697f3a3"
+    },
+    "spec": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/spec/SKILL.md",
+      "computedHash": "b90ed2e290bbefe6c07cea0077e1b4514af1c3ee5c78cffc6efae333e5a3bf70"
+    },
+    "tdd-principles": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/tdd-principles/SKILL.md",
+      "computedHash": "079105b4c5e658827b006f1ad5e2f4d19e3260784ab356d6029ff4cea8b53ea2"
+    },
+    "testify": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/testify/SKILL.md",
+      "computedHash": "e141bd29c21a749c6be448cc1dbff5a4ced7f565d974dca502ca653b0aee7576"
+    },
+    "update-toolkit": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/spellbook/update-toolkit/SKILL.md",
+      "computedHash": "c7d81b551e54dddd8656789682f9b0f4fb121876013f64162dafdbbee42006f2"
+    },
+    "workflow": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/workflow/SKILL.md",
+      "computedHash": "d27b4b353931f1ff8b805c2f47d2ded7c835c1c43d6a6cab1ec2c0584749df01"
+    }
+  }
+}
