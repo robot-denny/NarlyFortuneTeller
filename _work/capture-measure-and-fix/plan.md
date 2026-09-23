@@ -106,6 +106,14 @@ replacing it is the next increment.
   from the venv (`Could not find PyAudio`), so the real mic cannot open on the laptop at all —
   which would make Step 8's arm's-length check impossible. V2 `3e` had it as a Pi item; the mic
   needs it on every platform, so it lands with the other runtime dependency this increment adds.
+- **Decided at Step 3's review.** `FakeFortune`'s default text is `"[TEST FORTUNE] You will find
+  what you seek."` rather than the plan's literal — a dry-run ticket from an offline run must
+  not be mistakable for a real one by a tester reading only the ticket. `FakeAudioOut` is not
+  wired by any flag and the docstrings no longer claim it is: `PygameAudioOut` already degrades
+  when no speaker exists, so the fake serves tests only, and it proves cue *order*, not timing.
+- **Carried forward from Step 3's review** (Pi increment): `audioop` is removed in Python 3.13
+  and `SpeechRecognition` 3.16 imports it (the `DeprecationWarning` on every test run is this).
+  The Pi image must ship Python ≤ 3.12 until the next increment drops `SpeechRecognition`.
 - **Carried forward from Step 1's review** (not this increment's work): the Pi deploy script
   must install `requirements.txt` explicitly, never a `requirements*.txt` glob, or pytest lands on
   the Pi. Belongs to the Pi increment's spec.
