@@ -7,8 +7,9 @@ recorded as `outcome=heard` with their exact words.
 
 No hardware is touched. The mic, the recognizer, and the OpenAI call are all
 replaced through `configure_providers`, the same seam `main()` uses. The
-Arduino `LedClient` is left in place — it degrades to a no-op when no serial
-port exists, and it does so quickly.
+speaker and the Arduino `LedClient` are silenced by the shared autouse fixture
+in `conftest.py`, which also loads the default persona and restores the module
+globals after each test.
 """
 
 import logging
@@ -17,58 +18,16 @@ import pytest
 import speech_recognition as sr
 
 import serial_trigger
-from config_loader import load_config
 from fakes import FakeAudioOut, FakeFortune, FakeTranscriber
 
+
+pytestmark = pytest.mark.usefixtures("quiet_and_configured")
 
 AUDIO = object()  # a sentinel standing in for sr.AudioData
 QUESTION = "Will I find treasure today?"
 
 
-class _NoLeds:
-    """Stands in for LedClient so a test never opens the real serial port.
-
-    Without this, a test on the owner's laptop with the Arduino plugged in would
-    open the port, pay the two-second Uno reset, and animate the booth's LEDs."""
-
-    def start(self, *args, **kwargs): pass
-    def stop(self): pass
-    def close(self): pass
-
-
-@pytest.fixture(autouse=True)
-def quiet_and_configured(monkeypatch):
-    """Load the default persona and silence the speaker and LEDs for every test here.
-
-    `on_coin_event` still plays the "generating" sound through macOS `afplay`
-    at this step (the in-process player arrives in Step 7). Replacing it with a
-    no-op keeps the test run silent; production code is untouched. `LedClient`
-    is replaced for the same reason — see `_NoLeds`.
-
-    The fakes' `get_audio` callables deliberately never call `on_ready`, for
-    the same reason: at this step `on_ready` is the real chime.
-
-    The module globals this file sets (`_config` and the four providers) are put
-    back afterwards, so no other test file inherits what the last test here wired.
-    """
-    monkeypatch.setattr(serial_trigger, "afplay", lambda *args, **kwargs: None)
-    monkeypatch.setattr(serial_trigger, "LedClient", lambda *args, **kwargs: _NoLeds())
-    saved = (serial_trigger._config, serial_trigger._get_audio, serial_trigger._transcribe,
-             serial_trigger._fortune, serial_trigger._audio_out)
-    serial_trigger._config = load_config("default")
-    yield
-    (serial_trigger._config, serial_trigger._get_audio, serial_trigger._transcribe,
-     serial_trigger._fortune, serial_trigger._audio_out) = saved
-
-
-def _line_starting(caplog, prefix):
-    """The one log message that starts with `prefix` — the capture or question record."""
-    matches = [r.getMessage() for r in caplog.records if r.getMessage().startswith(prefix)]
-    assert len(matches) == 1, f"expected exactly one {prefix!r} record, got: {matches!r}"
-    return matches[0]
-
-
-def test_silent_run_is_recorded_as_no_speech_and_substituted(caplog):
+def test_silent_run_is_recorded_as_no_speech_and_substituted(caplog, log_lines):
     """Nobody spoke: the log says no_speech, then that the default question was substituted."""
 
     def get_audio(on_ready):
@@ -86,8 +45,8 @@ def test_silent_run_is_recorded_as_no_speech_and_substituted(caplog):
     serial_trigger.on_coin_event(pulses=1, dry_run=True)
 
     default_question = serial_trigger._config["default_question"]
-    capture_line = _line_starting(caplog, "capture ")
-    question_line = _line_starting(caplog, "question ")
+    capture_line = log_lines("capture ", expect=1)[0]
+    question_line = log_lines("question ", expect=1)[0]
     assert "outcome=no_speech" in capture_line
     assert 'heard=""' in capture_line
     assert 'detail="no speech"' in capture_line
@@ -96,7 +55,7 @@ def test_silent_run_is_recorded_as_no_speech_and_substituted(caplog):
     assert fortune.questions == [default_question]
 
 
-def test_heard_run_records_the_attendees_words(caplog):
+def test_heard_run_records_the_attendees_words(caplog, log_lines):
     """The attendee was heard: the log says heard, with their words, and the AI got them."""
     fortune = FakeFortune()
     serial_trigger.configure_providers(
@@ -109,8 +68,8 @@ def test_heard_run_records_the_attendees_words(caplog):
 
     serial_trigger.on_coin_event(pulses=1, dry_run=True)
 
-    capture_line = _line_starting(caplog, "capture ")
-    question_line = _line_starting(caplog, "question ")
+    capture_line = log_lines("capture ", expect=1)[0]
+    question_line = log_lines("question ", expect=1)[0]
     assert "outcome=heard" in capture_line
     assert f'heard="{QUESTION}"' in capture_line
     assert "detail=" not in capture_line  # detail is a failure-only field
@@ -118,7 +77,7 @@ def test_heard_run_records_the_attendees_words(caplog):
     assert fortune.questions == [QUESTION]
 
 
-def test_capture_line_levels_match_outcome(caplog):
+def test_capture_line_levels_match_outcome(caplog, log_lines):
     """A heard run is INFO; a failed capture is WARNING, so `grep WARNING` finds the failures."""
     serial_trigger.configure_providers(
         get_audio=lambda on_ready: AUDIO,
@@ -136,7 +95,7 @@ def test_capture_line_levels_match_outcome(caplog):
     assert "outcome=not_understood" in capture_records[0].getMessage()
 
 
-def test_multiline_error_detail_stays_on_one_line(caplog):
+def test_multiline_error_detail_stays_on_one_line(caplog, log_lines):
     """An error message with a newline in it must not split the capture record across lines."""
 
     def get_audio(on_ready):
@@ -160,7 +119,7 @@ def test_multiline_error_detail_stays_on_one_line(caplog):
     assert 'detail="first line second line"' in message
 
 
-def test_transcript_with_quotes_and_newlines_stays_one_parseable_line(caplog):
+def test_transcript_with_quotes_and_newlines_stays_one_parseable_line(caplog, log_lines):
     """An attendee's words can contain quotes or line breaks; the log line must stay one
     line with its key="value" shape intact — the same rule detail= already follows."""
     serial_trigger.configure_providers(
@@ -173,15 +132,15 @@ def test_transcript_with_quotes_and_newlines_stays_one_parseable_line(caplog):
 
     serial_trigger.on_coin_event(pulses=1, dry_run=True)
 
-    capture_line = _line_starting(caplog, "capture ")
-    question_line = _line_starting(caplog, "question ")
+    capture_line = log_lines("capture ", expect=1)[0]
+    question_line = log_lines("question ", expect=1)[0]
     for line in (capture_line, question_line):
         assert "\n" not in line
     assert 'heard="say \'hello\' world"' in capture_line
     assert question_line == 'question source=heard text="say \'hello\' world"'
 
 
-def test_unconfigured_providers_are_reported_as_a_wiring_error_not_a_mic_error(caplog):
+def test_unconfigured_providers_are_reported_as_a_wiring_error_not_a_mic_error(caplog, log_lines):
     """If configure_providers() was never called, the log must say so plainly rather than
     blaming the microphone — and the attendee still gets the fallback slip."""
     serial_trigger.configure_providers(None, None, None, None)

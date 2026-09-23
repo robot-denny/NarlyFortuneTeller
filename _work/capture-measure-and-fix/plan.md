@@ -128,6 +128,15 @@ replacing it is the next increment.
   had — this does not fix Open Issue 2 (the constant still does not control `listen()`) and does
   not claim to. Tests stub `LedClient` as well as `afplay`, so a test run on a laptop with the
   Arduino attached never opens the port or animates the booth.
+- **Decided at Step 6's review.** `--offline` with neither `--clip` nor `--question` is a typed
+  run of the persona's `default_question`, not a real-mic run: the whole audience for `--offline`
+  is a tester with nothing plugged in, and until Step 7 lands `pyaudio` the real mic could only
+  produce `mic_error`. Flag logic lives in `build_providers(args)`, outside `main()`, so a test can
+  drive it. `--clip` paths are validated at startup with `parser.error`, not discovered per coin
+  as a mislabelled `mic_error`. The conftest fixture is opt-in (`pytestmark = usefixtures`) so the
+  four test files that never touch `serial_trigger` stay independent of its import graph. Offline
+  runs log `outcome=heard` with the fake's text — the capture-line format is a fixed contract and
+  the startup `Offline:` line gives the context; `/feature update` should say so in the doc.
 - **Carried forward from Step 5's review** (Increment 4, recognizer): inside the 25 s guard,
   worst-case chime (1.96 s) + calibration (0.8 s) + `listen` (10 s wait + 8 s phrase) leaves
   ~4.2 s for the Google round-trip, and `recognize_google` has no timeout of its own. Slow

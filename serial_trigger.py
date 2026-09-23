@@ -1,6 +1,7 @@
 # serial_trigger.py - Orchestrates the full fortune-telling flow
 # Adds short audio cues (afplay) and fail-safe LED cues without changing core logic.
 
+import os
 import sys
 import re
 import argparse
@@ -12,7 +13,8 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 from ai_client import get_ai_response, init_ai
-from capture_client import CaptureOutcome, capture_question
+from capture_client import CaptureOutcome, capture_question, wav_get_audio
+from fakes import FakeFortune, FakeTranscriber, typed_get_audio
 from formatters import render_ticket
 from print_client import print_ticket
 from config_loader import load_config, list_personas
@@ -401,6 +403,47 @@ def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10)
         except KeyboardInterrupt:
             log.info("🛑 Exiting simulation mode.")
 
+def build_providers(args):
+    """Choose the microphone, recognizer, and fortune source for this run.
+
+    Hardware mode and plain simulate mode get the real ones. The simulate-only
+    flags swap in stand-ins:
+
+    - ``--clip PATH``   replays a recording instead of listening on the mic.
+    - ``--question T``  skips the mic and recognizer entirely and uses T.
+    - ``--offline``     replaces the recognizer and the fortune service so no
+      network is used. With neither --clip nor --question it also replaces the
+      mic with the persona's default question typed in, so an offline run needs
+      no hardware at all — that is what a remote tester with nothing plugged in
+      is for.
+
+    Returns ``(get_audio, transcribe, fortune)`` ready for ``configure_providers``.
+    Separate from main() so a test can check the flag logic directly.
+    """
+    get_audio, transcribe, fortune = mic_get_audio, google_transcribe, get_ai_response
+    default_question = _config.get("default_question", "What is my fortune?") if _config else "What is my fortune?"
+    question_text = args.question or default_question
+
+    if args.clip:
+        get_audio = wav_get_audio(args.clip)
+        log.info(f"Replaying clip instead of the microphone: {args.clip}")
+    elif args.question or args.offline:
+        get_audio = typed_get_audio(question_text)
+        log.info(f'Using typed question instead of the microphone: "{question_text}"')
+
+    if args.question or args.offline:
+        # Typed text is not audio, so the recognizer must be the stand-in that
+        # simply hands the same words back. Offline uses it too, so nothing is
+        # sent to Google even when a clip is being replayed.
+        transcribe = FakeTranscriber(question_text)
+
+    if args.offline:
+        fortune = FakeFortune()
+        log.info("Offline: speech-to-text and fortune are stand-ins; no network calls will be made")
+
+    return get_audio, transcribe, fortune
+
+
 # ----------------------------------------
 # CLI
 # ----------------------------------------
@@ -453,7 +496,46 @@ def main():
         help="Also write log lines to this file (rotates at 5 MB, keeps 3 backups). Stdout is always on."
     )
 
+    # ---- Simulate-mode replay flags (all require --mode simulate) ----
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help=(
+            "Simulate only. Run a whole fortune with no microphone, no network, and no API spend: "
+            "the speech-to-text and fortune services are replaced by stand-ins, and the fortune is "
+            "marked [TEST FORTUNE]. On its own it uses the persona's default question, typed in; "
+            "add --question to type your own, or --clip to replay a recording through the fake "
+            "recognizer."
+        )
+    )
+    replay = parser.add_mutually_exclusive_group()
+    replay.add_argument(
+        "--clip",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Simulate only. Replay a recorded WAV/AIFF/FLAC file instead of listening on the "
+            "microphone. Without --offline the real Google recognizer transcribes it and the real "
+            "fortune is generated (one OpenAI call); with --offline neither service is contacted. "
+            "Cannot be combined with --question."
+        )
+    )
+    replay.add_argument(
+        "--question",
+        metavar="TEXT",
+        default=None,
+        help=(
+            "Simulate only. Skip the microphone and recognizer and use TEXT as the attendee's "
+            "question. Without --offline the REAL fortune is generated for it (one OpenAI call) - "
+            "a quick way to type a question and see what Narly answers. Cannot be combined with --clip."
+        )
+    )
+
     args = parser.parse_args()
+    if args.mode != "simulate" and (args.offline or args.clip or args.question):
+        parser.error("--offline/--clip/--question are only valid with --mode simulate")
+    if args.clip and not os.path.isfile(args.clip):
+        parser.error(f"--clip file not found: {args.clip}")
     configure_logging(args.log_file)
 
     # List personas and exit if requested
@@ -468,8 +550,10 @@ def main():
     init_ai(args.persona)
     log.info(f"Persona: {_config['_persona_name']}")
 
-    # Plug in the real mic, recognizer, and AI. (audio_out is wired in a later step.)
-    configure_providers(mic_get_audio, google_transcribe, get_ai_response, None)
+    # Pick the real mic/recognizer/AI or their stand-ins from the flags.
+    # (audio_out is wired in a later step.)
+    get_audio, transcribe, fortune = build_providers(args)
+    configure_providers(get_audio, transcribe, fortune, None)
 
     # Keep LED port aligned to main serial unless you override at runtime
     PORT = args.port or PORT

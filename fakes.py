@@ -13,6 +13,9 @@ How they are used:
   flag wires it in so no audio leaves the machine.
 - ``FakeFortune`` stands in for the OpenAI call. ``--offline`` wires this in
   too, so an offline run costs nothing.
+- ``typed_get_audio`` stands in for the microphone when a tester types the
+  question instead of speaking it. The ``--question`` flag wires it in,
+  always paired with a ``FakeTranscriber`` carrying the same text.
 - ``FakeAudioOut`` stands in for the speaker. It is NOT wired in by any flag:
   the real player (``PygameAudioOut`` in ``audio_out.py``) already goes quiet
   on its own when there is no speaker, so a fake is only needed by the tests,
@@ -78,3 +81,22 @@ class FakeAudioOut:
 
     def is_busy(self):
         return False
+
+
+def typed_get_audio(text):
+    """Stands in for the microphone when the question is typed, not spoken.
+
+    Returns a ``get_audio``-shaped function: it takes ``on_ready``, calls it
+    once (so the readiness chime still plays and the cue is observable in a
+    test), and hands back ``text`` itself as the "audio". That return value is
+    just the string — never real audio — so it MUST be paired with
+    ``FakeTranscriber(text)``, which ignores its input and returns the same
+    words. Handing it to the real Google recognizer would fail.
+
+    Used by ``serial_trigger.py --mode simulate --question "<text>"``."""
+
+    def _(on_ready):
+        on_ready()
+        return text
+
+    return _

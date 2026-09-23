@@ -137,3 +137,28 @@ def capture_question(get_audio, transcribe, on_ready=lambda: None, overall_timeo
 
     result.seconds = time.monotonic() - started
     return result
+
+
+def wav_get_audio(path):
+    """Build a ``get_audio`` provider that replays a recorded clip instead of
+    opening the microphone.
+
+    ``path`` is a WAV, AIFF, or FLAC file (the formats ``sr.AudioFile`` reads
+    without PyAudio). The returned function has the same shape as the real
+    microphone provider — it takes ``on_ready`` and returns ``sr.AudioData`` —
+    so ``capture_question`` cannot tell the two apart. It calls ``on_ready()``
+    first, exactly as the mic does, so a tester replaying a clip hears the same
+    readiness chime an attendee would, and a test can see the cue fire.
+
+    Used by ``serial_trigger.py --mode simulate --clip <path>``. Meant for a
+    clip of a few seconds — one question. The whole file is read into memory
+    and then transcribed, and the same 25-second guard applies as to a live
+    attendee, so a long recording will be reported as ``overrun``.
+    """
+
+    def _(on_ready):
+        on_ready()
+        with sr.AudioFile(path) as source:
+            return sr.Recognizer().record(source)
+
+    return _
