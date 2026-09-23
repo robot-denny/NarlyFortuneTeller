@@ -111,6 +111,14 @@ replacing it is the next increment.
   not be mistakable for a real one by a tester reading only the ticket. `FakeAudioOut` is not
   wired by any flag and the docstrings no longer claim it is: `PygameAudioOut` already degrades
   when no speaker exists, so the fake serves tests only, and it proves cue *order*, not timing.
+- **Decided at Step 4's review.** `CaptureResult` gains `detail: str | None` — the failing
+  error's message, or its class name when it has none — so the log line can say which mic or
+  recognizer error struck, not just that one did (today's code logs `{e}`; losing it would be a
+  regression). The capture log line therefore extends to `capture outcome=<kind> heard="<text>"
+  secs=<n> detail="<why>"`, the last field present only on failures, so every grep in the plan
+  still works. A recognizer that returns empty text is `not_understood`, never `heard` — the
+  module normalises it so the log can never say "heard" beside a substituted question. `secs=` on
+  `overrun` is the true stall time, not the guard value; do not truncate it.
 - **Carried forward from Step 3's review** (Pi increment): `audioop` is removed in Python 3.13
   and `SpeechRecognition` 3.16 imports it (the `DeprecationWarning` on every test run is this).
   The Pi image must ship Python ≤ 3.12 until the next increment drops `SpeechRecognition`.
@@ -267,7 +275,10 @@ outcome and none collapses into another. This is Acceptance Criterion 2's founda
 > and `record_and_transcribe_with_timeout`. In `on_coin_event`, replace the capture call with
 > `result = capture_client.capture_question(_get_audio, _transcribe, on_ready=...)`, then log
 > exactly one line `capture outcome=<result.outcome.value> heard="<text or empty>"
-> secs=<seconds:.1f>` at INFO for HEARD and WARNING otherwise. If `result.text` is falsy,
+> secs=<seconds:.1f>` at INFO for HEARD and WARNING otherwise — and, when `result.detail` is
+> not None (every failure), append ` detail="<result.detail>"` to that same line so the operator
+> can see *which* mic or recognizer error it was. Do not round `secs` beyond one decimal: on an
+> `overrun` it reports the true stall duration, not the guard, and that is diagnostic. If `result.text` is falsy,
 > substitute the persona default as today and log `question source=substituted text="<default>"`;
 > otherwise log `question source=heard text="<text>"`. Replace the `get_ai_response(question)`
 > call inside `generate_fortune` with `_fortune(question)`, and have `main()` call
