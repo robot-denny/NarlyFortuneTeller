@@ -102,6 +102,10 @@ replacing it is the next increment.
   `urllib3` are held to WARNING so the event log is not interleaved with one HTTP line per
   fortune. The blank lines that used to separate cycles on the terminal are gone and are **not**
   being replaced: the unconditional `💰 [COIN EVENT]` line is the grouping anchor.
+- **`pyaudio` is added at Step 7, not the Pi increment.** Step 2's manual check found it absent
+  from the venv (`Could not find PyAudio`), so the real mic cannot open on the laptop at all —
+  which would make Step 8's arm's-length check impossible. V2 `3e` had it as a Pi item; the mic
+  needs it on every platform, so it lands with the other runtime dependency this increment adds.
 - **Carried forward from Step 1's review** (not this increment's work): the Pi deploy script
   must install `requirements.txt` explicitly, never a `requirements*.txt` glob, or pytest lands on
   the Pi. Belongs to the Pi increment's spec.
@@ -329,7 +333,12 @@ spends nothing. Acceptance Criteria 4 and 5.
 ### Step 7 — In-process playback replacing `afplay`
 
 > **Prompt**: Implement Step 7 of `_work/capture-measure-and-fix/plan.md`. Add `pygame>=2.5,<3`
-> to `requirements.txt`. Create `audio_out.py` at the repo root with class `PygameAudioOut`:
+> AND `pyaudio>=0.2.14,<0.3` to `requirements.txt`, then `.venv/bin/pip install -r
+> requirements.txt`. `pyaudio` is what lets `sr.Microphone()` open at all — it is missing from the
+> venv today, so the real mic cannot open on this laptop and Step 8's manual check would be
+> impossible. If the `pyaudio` wheel fails to build on macOS, run `brew install portaudio` first
+> and retry; on the Pi the equivalent is `apt install portaudio19-dev`, which the deploy script
+> already lists. Confirm with `.venv/bin/python -c "import pyaudio; print(pyaudio.__version__)"`. Create `audio_out.py` at the repo root with class `PygameAudioOut`:
 > `__init__` tries `import pygame` and `pygame.mixer.init()`, and on any failure sets
 > `self.available = False` and logs one WARNING `audio_out unavailable: <reason>`; `play(path,
 > wait=False)` returns immediately if not available or if `path` does not exist (logging a
@@ -347,14 +356,15 @@ spends nothing. Acceptance Criteria 4 and 5.
 > under `caplog`. Run → RED → implement → GREEN. Note for Key Decisions: pygame volume is
 > 0.0–1.0, so the old `afplay -v 3.0` amplification is lost; physical speaker volume compensates.
 
-**What to build**: `audio_out.py`; modify `requirements.txt`, `serial_trigger.py`;
-`tests/test_audio_out.py`.
+**What to build**: `audio_out.py`; modify `requirements.txt` (add `pygame` and `pyaudio`),
+`serial_trigger.py`; `tests/test_audio_out.py`.
 
 **Test first**: the two cues are requested in order with the right blocking; a missing file
 degrades and logs rather than raising. Acceptance Criterion 8's software half.
 
 **Validation**:
-- [Automated]: `.venv/bin/python -m pytest -q` → all passing.
+- [Automated]: `.venv/bin/python -m pytest -q` → all passing; `.venv/bin/python -c "import pyaudio"`
+  exits 0 (the mic can open again — prerequisite for Step 8's manual check).
 - [Manual]: `--mode simulate --dry-run --offline --question "test"`, press Enter → the chime is
   audible from the laptop speaker, then the thinking cue. If a Linux machine is available, the
   same command plays both cues there — that is the criterion; if not, defer this check to the Pi
@@ -413,8 +423,8 @@ listen; library threshold and adaptation untouched. Acceptance Criteria 6 and 7'
 > *Build*. (3) Update `.agents/config/conventions.md` → *Planning gotchas*: change "There is no
 > test suite" to say a pytest suite exists for hardware-free paths and that hardware paths
 > (mic, Arduino, printer) remain manual. (4) Update `.env.example` with a commented
-> `# LOG_FILE is a CLI flag: --log-file path` note. (5) Confirm `requirements.txt` has `pygame`
-> (from Step 7) and note `textwrap3` is unused but leave its removal to the housekeeping item in
+> `# LOG_FILE is a CLI flag: --log-file path` note. (5) Confirm `requirements.txt` has `pygame` and
+> `pyaudio` (from Step 7) and note `textwrap3` is unused but leave its removal to the housekeeping item in
 > ROADMAP *Later*. (6) Parametrize `test_render_ticket_never_exceeds_thermal_printer_width` over
 > `list_personas()` so every persona's header and footer are checked against the 32-character
 > width, not only `default` — `render_ticket`'s `center()` does not truncate, so an over-long
