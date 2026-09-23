@@ -55,6 +55,12 @@
       "skillPath": "skills/core/spellbook/plan/SKILL.md",
       "computedHash": "bd3b44b95b9eb374ac227767d6bf95e84bb1aab877bcaee54b8012e395438260"
     },
+    "prose-discipline": {
+      "source": "robot-denny/cantrip",
+      "sourceType": "github",
+      "skillPath": "skills/core/reference/prose-discipline/SKILL.md",
+      "computedHash": "71fb8ff23edccf1fe0bd4c101f27aa252cf1868f7989ada1680a72710f209deb"
+    },
     "retrofit": {
       "source": "robot-denny/cantrip",
       "sourceType": "github",
