@@ -93,6 +93,9 @@ replacing it is the next increment.
   Google recognizer on the file — permitted, for testing the recogniser against fixtures later,
   but not deterministic and not what "same clip, same outcome" promises. Reproducibility is
   guaranteed only with `--offline`.
+- **Carried forward from Step 1's review** (not this increment's work): the Pi deploy script
+  must install `requirements.txt` explicitly, never a `requirements*.txt` glob, or pytest lands on
+  the Pi. Belongs to the Pi increment's spec.
 - **Existing test-free smoke checks stay.** `compileall` and `--list-personas` remain in
   validation lines; they are the checks `stack.md` already trusts.
 
@@ -403,7 +406,10 @@ listen; library threshold and adaptation untouched. Acceptance Criteria 6 and 7'
 > (mic, Arduino, printer) remain manual. (4) Update `.env.example` with a commented
 > `# LOG_FILE is a CLI flag: --log-file path` note. (5) Confirm `requirements.txt` has `pygame`
 > (from Step 7) and note `textwrap3` is unused but leave its removal to the housekeeping item in
-> ROADMAP *Later*. Run `.venv/bin/python -m pytest -q` and `--list-personas` to confirm nothing
+> ROADMAP *Later*. (6) Parametrize `test_render_ticket_never_exceeds_thermal_printer_width` over
+> `list_personas()` so every persona's header and footer are checked against the 32-character
+> width, not only `default` — `render_ticket`'s `center()` does not truncate, so an over-long
+> header in one persona would slip past a test that checks another. Run `.venv/bin/python -m pytest -q` and `--list-personas` to confirm nothing
 > moved.
 
 **What to build**: `docs/testing.md`; modify `.agents/config/stack.md`,
