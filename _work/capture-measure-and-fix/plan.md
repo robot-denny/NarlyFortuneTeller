@@ -55,7 +55,9 @@ replacing it is the next increment.
   order, and the cue itself all be tested without a mic or a fixture file — and why the
   sequencing fix in Step 8 is a reorder inside one function rather than a hunt across the file.
 - **Log format — one greppable line per event, key=value.** Stdlib `logging`, format
-  `%(asctime)s %(levelname)s %(message)s`. The capture record is exactly
+  `%(asctime)s %(levelname)-8s %(message)s` — the level padded to 8 so every message starts
+  in the same column regardless of severity (amended at Step 2's review; the original
+  unpadded form shifted the indentation by up to three characters between INFO and WARNING). The capture record is exactly
   `capture outcome=<kind> heard="<text>" secs=<n>`, and substitution is a second line
   `question source=<heard|substituted> text="<text>"`. The operator counts a day with
   `grep -c 'outcome=no_speech' <log>`. Not JSON: the owner reads these by eye and greps them;
@@ -93,6 +95,13 @@ replacing it is the next increment.
   Google recognizer on the file — permitted, for testing the recogniser against fixtures later,
   but not deterministic and not what "same clip, same outcome" promises. Reproducibility is
   guaranteed only with `--offline`.
+- **Decided at Step 2's review.** `configure_logging` removes only the handlers it attached
+  itself, never others' (pytest's `caplog` was being silently stripped, which would have let
+  Step 5's tests pass while asserting nothing). A bad `--log-file` path degrades to stdout-only
+  with one ERROR line rather than crashing `main()`. `httpx`, `httpcore`, `openai`, and
+  `urllib3` are held to WARNING so the event log is not interleaved with one HTTP line per
+  fortune. The blank lines that used to separate cycles on the terminal are gone and are **not**
+  being replaced: the unconditional `💰 [COIN EVENT]` line is the grouping anchor.
 - **Carried forward from Step 1's review** (not this increment's work): the Pi deploy script
   must install `requirements.txt` explicitly, never a `requirements*.txt` glob, or pytest lands on
   the Pi. Belongs to the Pi increment's spec.
@@ -441,7 +450,10 @@ loop finishes.
 > scenarios the new tests prove; leave hardware-only scenarios `Not covered` with the manual
 > check named. Leave architecture criteria — the test harness, the fakes' internals — in the
 > shipped spec; they are point-in-time and must not appear as Rules. Add a revision note dated
-> today.
+> today. Also reconcile the spec's "the operator's live view behaves as it does today" with
+> what is now true: every terminal line carries a timestamp and level, and the blank lines
+> between cycles are gone (the `💰 [COIN EVENT]` line is the anchor). Say so plainly rather
+> than leaving a sentence that is no longer accurate.
 >
 > **Validation**: The capability doc describes current behavior with no transition-style Rules;
 > no new feature doc was added; every `Covered` row points at a test that exists and passes.

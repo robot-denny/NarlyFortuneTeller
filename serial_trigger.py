@@ -15,6 +15,9 @@ from ai_client import get_ai_response, init_ai
 from formatters import render_ticket
 from print_client import print_ticket
 from config_loader import load_config, list_personas
+from logger import configure_logging, get_logger
+
+log = get_logger(__name__)
 
 # ---- Optional LED client (safe no-op if missing) ----
 try:
@@ -85,7 +88,7 @@ def record_and_transcribe():
     # Play sound first - signals mic is about to be ready
     afplay(SFX_START, wait=True, volume=3.0)  # 2x louder (adjust 1.0-4.0)
 
-    print("  🎤 Listening for question...")
+    log.info("  🎤 Listening for question...")
     try:
         with mic as source:
             # Quick ambient noise calibration while sound plays
@@ -98,21 +101,21 @@ def record_and_transcribe():
             # Mic is ready now, listen for speech
             audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
 
-        print("  🧠 Transcribing...")
+        log.info("  🧠 Transcribing...")
         text = recognizer.recognize_google(audio)
-        print(f"  ✓ Question: {text}")
+        log.info(f"  ✓ Question: {text}")
         return text
     except sr.WaitTimeoutError:
-        print("  ⚠ No speech detected (timeout)")
+        log.warning("  ⚠ No speech detected (timeout)")
         return None
     except sr.UnknownValueError:
-        print("  ⚠ Could not understand audio")
+        log.warning("  ⚠ Could not understand audio")
         return None
     except sr.RequestError as e:
-        print(f"  ⚠ Speech recognition error: {e}")
+        log.warning(f"  ⚠ Speech recognition error: {e}")
         return None
     except Exception as e:
-        print(f"  ⚠ Microphone error: {e}")
+        log.warning(f"  ⚠ Microphone error: {e}")
         return None
 
 def record_and_transcribe_with_timeout():
@@ -124,10 +127,10 @@ def record_and_transcribe_with_timeout():
             # The inner function handles its own timeout (WaitTimeoutError)
             return future.result(timeout=TIMEOUT_RECORDING + 10)  # Extra time for transcription
         except TimeoutError:
-            print(f"  ⚠ Total timeout exceeded - force stopping")
+            log.warning(f"  ⚠ Total timeout exceeded - force stopping")
             return None
         except Exception as e:
-            print(f"  ⚠ Unexpected error during recording: {e}")
+            log.warning(f"  ⚠ Unexpected error during recording: {e}")
             return None
 
 # ----------------------------------------
@@ -135,13 +138,13 @@ def record_and_transcribe_with_timeout():
 # ----------------------------------------
 def generate_fortune(question: str) -> str:
     """Call AI to generate fortune response."""
-    print("  🔮 Generating fortune...")
+    log.info("  🔮 Generating fortune...")
     try:
         fortune = get_ai_response(question)
-        print(f"  ✓ Fortune generated ({len(fortune)} chars)")
+        log.info(f"  ✓ Fortune generated ({len(fortune)} chars)")
         return fortune
     except Exception as e:
-        print(f"  ⚠ AI error: {e}")
+        log.warning(f"  ⚠ AI error: {e}")
         return None
 
 def generate_fortune_with_timeout(question: str):
@@ -151,10 +154,10 @@ def generate_fortune_with_timeout(question: str):
         try:
             return future.result(timeout=TIMEOUT_AI)
         except TimeoutError:
-            print(f"  ⚠ AI timeout ({TIMEOUT_AI}s exceeded)")
+            log.warning(f"  ⚠ AI timeout ({TIMEOUT_AI}s exceeded)")
             return None
         except Exception as e:
-            print(f"  ⚠ Unexpected error during AI generation: {e}")
+            log.warning(f"  ⚠ Unexpected error during AI generation: {e}")
             return None
 
 # ----------------------------------------
@@ -162,7 +165,7 @@ def generate_fortune_with_timeout(question: str):
 # ----------------------------------------
 def print_fortune(fortune: str, dry_run: bool = False):
     """Format and print fortune ticket."""
-    print("  🖨️  Printing fortune...")
+    log.info("  🖨️  Printing fortune...")
     try:
         ticket = render_ticket(fortune, _config)
         if dry_run:
@@ -171,9 +174,9 @@ def print_fortune(fortune: str, dry_run: bool = False):
             print("--- END DRY RUN ---\n")
         else:
             print_ticket(ticket)
-            print("  ✓ Printed successfully")
+            log.info("  ✓ Printed successfully")
     except Exception as e:
-        print(f"  ⚠ Print error: {e}")
+        log.warning(f"  ⚠ Print error: {e}")
         raise
 
 def print_fortune_with_timeout(fortune: str, dry_run: bool = False):
@@ -183,10 +186,10 @@ def print_fortune_with_timeout(fortune: str, dry_run: bool = False):
         try:
             future.result(timeout=TIMEOUT_PRINT)
         except TimeoutError:
-            print(f"  ⚠ Print timeout ({TIMEOUT_PRINT}s exceeded)")
+            log.warning(f"  ⚠ Print timeout ({TIMEOUT_PRINT}s exceeded)")
             raise
         except Exception as e:
-            print(f"  ⚠ Unexpected error during printing: {e}")
+            log.warning(f"  ⚠ Unexpected error during printing: {e}")
             raise
 
 def print_fallback(dry_run: bool = False):
@@ -194,7 +197,7 @@ def print_fallback(dry_run: bool = False):
     fallback_msg = "Narly drifted off in the currents... try again in a moment."
     ticket = render_ticket(fallback_msg, _config)
 
-    print("  ⚠ Printing fallback message.")
+    log.warning("  ⚠ Printing fallback message.")
     if dry_run:
         print("\n--- FALLBACK (DRY RUN) ---")
         print(ticket)
@@ -205,13 +208,13 @@ def print_fallback(dry_run: bool = False):
             with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(print_ticket, ticket)
                 future.result(timeout=TIMEOUT_PRINT)
-            print("  ✓ Fallback printed")
+            log.info("  ✓ Fallback printed")
         except TimeoutError:
-            print(f"  ✗ Fallback print timeout ({TIMEOUT_PRINT}s) - showing on console:")
+            log.error(f"  ✗ Fallback print timeout ({TIMEOUT_PRINT}s) - showing on console:")
             print("\n" + ticket + "\n")
         except Exception as e:
-            print(f"  ✗ Could not print fallback: {e}")
-            print("  → Showing fallback on console instead:")
+            log.error(f"  ✗ Could not print fallback: {e}")
+            log.info("  → Showing fallback on console instead:")
             print("\n" + ticket + "\n")
 
 # ----------------------------------------
@@ -223,7 +226,7 @@ def on_coin_event(pulses: int, dry_run: bool = False):
     Flow: coin → record → transcribe → generate → print
     All steps have timeout protection.
     """
-    print(f"\n💰 [COIN EVENT] pulses={pulses}")
+    log.info(f"💰 [COIN EVENT] pulses={pulses}")
 
     # Create a safe LED client (no-op if not available)
     led = LedClient(LED_PORT, BAUD)
@@ -236,7 +239,7 @@ def on_coin_event(pulses: int, dry_run: bool = False):
 
         if not question:
             question = _config.get("default_question", "What is my fortune?") if _config else "What is my fortune?"
-            print(f"  → Using default question: {question}")
+            log.info(f"  → Using default question: {question}")
 
         # Step 2: Generate fortune (with timeout) — show "thinking"
         led.start("PULSE")
@@ -250,14 +253,14 @@ def on_coin_event(pulses: int, dry_run: bool = False):
         # Step 3: Print (with timeout)
         try:
             print_fortune_with_timeout(fortune, dry_run)
-            print("✓ Fortune cycle complete\n")
+            log.info("✓ Fortune cycle complete")
         except Exception:
             print_fallback(dry_run)
         finally:
             led.stop()
 
     except Exception as e:
-        print(f"  ✗ Unexpected error in coin event handler: {e}")
+        log.error(f"  ✗ Unexpected error in coin event handler: {e}")
         print_fallback(dry_run)
     finally:
         led.stop()
@@ -268,17 +271,17 @@ def on_coin_event(pulses: int, dry_run: bool = False):
 # ----------------------------------------
 def listen_serial_mode(port: str, dry_run: bool = False):
     """Listen for COIN X messages from Arduino on serial port."""
-    print(f"🔌 Hardware mode: Listening on {port} @ {BAUD}...")
-    print("   Waiting for coin insertion...\n")
+    log.info(f"🔌 Hardware mode: Listening on {port} @ {BAUD}...")
+    log.info("   Waiting for coin insertion...")
 
     ser = serial.Serial(port, BAUD, timeout=1)
     line_re = re.compile(r"^\s*COIN\s+(\d+)\s*$")
 
     # Allow Arduino to settle and ignore spurious signals during boot
-    print("   Initializing Arduino...")
+    log.info("   Initializing Arduino...")
     time.sleep(3)
     ser.reset_input_buffer()  # Clear any buffered boot messages
-    print("   Ready!\n")
+    log.info("   Ready!")
 
     first_coin_ignored = False  # Flag to ignore first spurious coin signal
 
@@ -291,14 +294,14 @@ def listen_serial_mode(port: str, dry_run: bool = False):
 
             # Skip Arduino boot/ready messages
             if "ready" in raw.lower() or "arduino" in raw.lower():
-                print(f"[arduino] {raw}")
+                log.info(f"[arduino] {raw}")
                 continue
 
             m = line_re.match(raw)
             if m:
                 # Ignore the first COIN signal (likely spurious from boot)
                 if not first_coin_ignored:
-                    print(f"[arduino] Ignoring first coin signal: {raw}")
+                    log.info(f"[arduino] Ignoring first coin signal: {raw}")
                     first_coin_ignored = True
                     continue
 
@@ -307,39 +310,39 @@ def listen_serial_mode(port: str, dry_run: bool = False):
             else:
                 # Optional debug output
                 if raw:
-                    print(f"[arduino] {raw}")
+                    log.info(f"[arduino] {raw}")
     except KeyboardInterrupt:
-        print("\n\n🛑 Exiting serial mode.")
+        log.info("🛑 Exiting serial mode.")
     finally:
         ser.close()
 
 def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10):
     """Simulate coin events for testing without hardware."""
-    print("🎮 Simulation mode")
+    log.info("🎮 Simulation mode")
 
     # Reset LEDs to DIM on startup (clears any leftover state from previous session)
-    print("   Initializing LEDs...")
+    log.info("   Initializing LEDs...")
     led_init = LedClient(LED_PORT, BAUD)
     led_init.stop()
     led_init.close()
-    print("   LEDs ready\n")
+    log.info("   LEDs ready")
     if auto:
-        print(f"   Auto-triggering every {interval} seconds (Ctrl+C to stop)\n")
+        log.info(f"   Auto-triggering every {interval} seconds (Ctrl+C to stop)")
         try:
             while True:
-                print("[AUTO] Simulating coin insertion...")
+                log.info("[AUTO] Simulating coin insertion...")
                 on_coin_event(pulses=1, dry_run=dry_run)
                 time.sleep(interval)
         except KeyboardInterrupt:
-            print("\n\n🛑 Exiting simulation mode.")
+            log.info("🛑 Exiting simulation mode.")
     else:
-        print("   Press ENTER to simulate coin insertion (Ctrl+C to stop)\n")
+        log.info("   Press ENTER to simulate coin insertion (Ctrl+C to stop)")
         try:
             while True:
                 input("Press ENTER for coin → ")
                 on_coin_event(pulses=1, dry_run=dry_run)
         except KeyboardInterrupt:
-            print("\n\n🛑 Exiting simulation mode.")
+            log.info("🛑 Exiting simulation mode.")
 
 # ----------------------------------------
 # CLI
@@ -387,8 +390,14 @@ def main():
         action="store_true",
         help="List available personas and exit"
     )
+    parser.add_argument(
+        "--log-file",
+        default=None,
+        help="Also write log lines to this file (rotates at 5 MB, keeps 3 backups). Stdout is always on."
+    )
 
     args = parser.parse_args()
+    configure_logging(args.log_file)
 
     # List personas and exit if requested
     if args.list_personas:
@@ -400,7 +409,7 @@ def main():
     # Load persona config once at startup
     _config = load_config(args.persona)
     init_ai(args.persona)
-    print(f"Persona: {_config['_persona_name']}")
+    log.info(f"Persona: {_config['_persona_name']}")
 
     # Keep LED port aligned to main serial unless you override at runtime
     PORT = args.port or PORT
@@ -409,8 +418,8 @@ def main():
     if args.mode == "hardware":
         port = args.port or find_port()
         if not port:
-            print("❌ Could not auto-detect serial port.")
-            print("   Use --port to specify manually, e.g.: --port /dev/cu.usbmodem143101")
+            log.error("❌ Could not auto-detect serial port.")
+            log.error("   Use --port to specify manually, e.g.: --port /dev/cu.usbmodem143101")
             sys.exit(1)
         listen_serial_mode(port, dry_run=args.dry_run)
     else:

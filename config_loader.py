@@ -1,6 +1,10 @@
 from pathlib import Path
 import json
 
+from logger import get_logger
+
+log = get_logger(__name__)
+
 # Resolve paths relative to this file, not the working directory
 _BASE_DIR = Path(__file__).resolve().parent
 
@@ -25,7 +29,7 @@ def load_config(persona: str = "default"):
     persona_dir = _BASE_DIR / "personas" / persona
 
     if not persona_dir.exists():
-        print(f"  Warning: persona '{persona}' not found, falling back to 'default'")
+        log.warning(f"  persona '{persona}' not found, falling back to 'default'")
         persona = "default"
         persona_dir = _BASE_DIR / "personas" / "default"
 
