@@ -46,11 +46,47 @@ one or two modules, and carries its own verification.
 
 Phases are the shipping unit: the plan states "each phase is independently testable and
 shippable," and the owner works them strictly in order, verifying one before starting the next.
-So a phase is the roadmap entry; a sub-phase is the increment.
+So a phase is the roadmap entry; a sub-phase is the increment — unless neighbouring sub-phases
+share a verification session, in which case see *Grouping sub-phases* below.
 
 A slice routinely spans the Python orchestrator, a client module, the Arduino sketch, and the
 persona content — Phase 4 changes all four at once. Treat the sketch as part of the slice even
 though no automated command covers it.
+
+### Grouping sub-phases into one increment
+
+One sub-phase per increment is the default, not a rule. **Group adjacent sub-phases into a
+single increment when they share a verification session.** There is no test suite here — every
+check is a manual run, often needing specific hardware — so verification, not lines of code, is
+what an increment actually costs. Two sub-phases that are checked in the same sitting, on the
+same hardware, are one increment; splitting them buys nothing and pays for the setup twice.
+
+Group on these, in order:
+
+1. **What hardware the check needs.** Laptop alone, laptop plus Arduino, or the Pi. This is the
+   dominant cost and the hardest to fake — a sub-phase whose non-macOS branch only runs on the
+   Pi cannot be verified anywhere else, however small the diff.
+2. **Whether one sitting covers both.** If verifying the second means repeating the first's
+   setup — reflashing the sketch, re-plugging USB, booting the Pi — they belong together.
+3. **Size, last.** A sub-phase too small to carry its own spec (`3e` is one line once
+   `SpeechRecognition` is discounted) rides along with the neighbour it shares a session with
+   rather than earning a bundle of its own.
+
+Worked example — Phase 3's six sub-phases are three increments:
+
+| Increment | Sub-phases | Verified on |
+|---|---|---|
+| Unattended on the laptop | `3a` logging, `3b` watchdog | Laptop — kill it, watch it return |
+| Serial recovery | `3c` | Laptop + Arduino — unplug mid-run, re-plug into the *other* jack |
+| Pi deployment | `3d` audio, `3e` deps, `3f` deploy | The Pi — nothing else runs those paths |
+
+Two limits on this. **Never group across phases** — that is the bundling the owner explicitly
+rejected when Phase 2 was trimmed, and it is covered under *Implementation rules* below. And
+never group to save writing a spec when the checks are genuinely separate: a shared session is
+the reason, and if the sub-phases do not share one, they are separate increments however small.
+
+A grouped increment still records each sub-phase's own verification. Grouping merges the
+bundle, not the checks.
 
 ## Planning gotchas
 
