@@ -119,6 +119,20 @@ replacing it is the next increment.
   still works. A recognizer that returns empty text is `not_understood`, never `heard` — the
   module normalises it so the log can never say "heard" beside a substituted question. `secs=` on
   `overrun` is the true stall time, not the guard value; do not truncate it.
+- **Decided at Step 5's review.** Every quoted value on the two log lines — `heard`, `text`,
+  and `detail` — goes through one `_flatten()` (whitespace collapsed, `"` → `'`) so an attendee's
+  words can no more split an event across lines than an error message can. `on_coin_event`
+  raises a plain `RuntimeError` if `configure_providers()` was never called, rather than letting
+  a `None` provider surface as a misleading `mic_error`. The capture call passes
+  `overall_timeout=TIMEOUT_RECORDING + 10`, restoring the exact relationship the deleted wrapper
+  had — this does not fix Open Issue 2 (the constant still does not control `listen()`) and does
+  not claim to. Tests stub `LedClient` as well as `afplay`, so a test run on a laptop with the
+  Arduino attached never opens the port or animates the booth.
+- **Carried forward from Step 5's review** (Increment 4, recognizer): inside the 25 s guard,
+  worst-case chime (1.96 s) + calibration (0.8 s) + `listen` (10 s wait + 8 s phrase) leaves
+  ~4.2 s for the Google round-trip, and `recognize_google` has no timeout of its own. Slow
+  festival Wi-Fi can legitimately produce `overrun`. Pre-existing; weigh it when the recognizer
+  changes.
 - **Carried forward from Step 3's review** (Pi increment): `audioop` is removed in Python 3.13
   and `SpeechRecognition` 3.16 imports it (the `DeprecationWarning` on every test run is this).
   The Pi image must ship Python ≤ 3.12 until the next increment drops `SpeechRecognition`.
