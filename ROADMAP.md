@@ -14,7 +14,7 @@ it off the laptop.
 
 - `3a` Proper logging (`logger.py`) — replace `print()` with `logging`, stdout + rotating file
 - `3b` Watchdog wrapper — restart on crash, cap 10 restarts, reset after 5 min stable
-- `3c` Serial port recovery — reconnect loop when the Arduino USB drops
+- `3c` Serial port recovery — reconnect loop when the Arduino USB drops; also fixes `led_client.py`'s stale `tty.` default port
 - `3d` Cross-platform audio — replace macOS-only `afplay` with a platform-detecting `play_sound()`
 - `3e` Fix `requirements.txt` — add `pyaudio` (needed on the Pi for mic access)
 - `3f` Pi deployment — `deploy/setup-pi.sh`, `deploy/narly-fortune.service`, `deploy/README.md`

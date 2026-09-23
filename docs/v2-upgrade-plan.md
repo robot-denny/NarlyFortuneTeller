@@ -136,6 +136,25 @@ A simple script that runs `serial_trigger.py` as a subprocess and restarts it on
 
 Wrap the serial listener in a reconnection loop — if the Arduino USB disconnects, log the error, wait 5 seconds, re-detect the port, and reconnect.
 
+**Fix `led_client.py`'s default port as part of this.** `LedClient.__init__` currently defaults to
+`port="/dev/tty.usbmodem143101"`, which is wrong twice over: it is a stale port value, and it is a
+`tty.` device where the rest of the code uses `cu.` (on macOS, opening `tty.*` blocks waiting for
+carrier detect; `cu.*` does not).
+
+It is harmless today only because nothing reaches it — both call sites pass the port explicitly as
+`LedClient(LED_PORT, BAUD)`, and there are no bare `LedClient()` calls. Reconnection is what makes
+it dangerous: a recovery path that rebuilds a `LedClient` without threading the port through will
+silently fall back to a hardcoded `tty.` device instead of the one just re-detected, and the most
+likely symptom is a hang rather than an error.
+
+- Change the default to `port=None`.
+- When `port` is `None`, resolve it via `find_port()` rather than a literal.
+- Keep the re-detected port as the single source of truth through the reconnect path — the LED
+  client and the coin listener share one board, so they must not drift apart after a reconnect.
+
+Remember that the port name is not stable: it follows which USB-C jack the Arduino is plugged into
+(`143101` and `143301` are both real on the dev laptop). Re-detect; never re-hardcode.
+
 ### 3d. Cross-platform audio
 
 Replace macOS-only `afplay` with a `play_sound()` function that detects the platform:
@@ -155,6 +174,8 @@ Add missing dependencies: `SpeechRecognition`, `pyaudio` (needed on Pi for mic a
 ### How to verify
 1. Kill the main process — watchdog should restart it within 5 seconds
 2. Unplug Arduino USB mid-operation — app should log error and reconnect when re-plugged
+   - Re-plug into the *other* USB-C port so the device name changes; it should still reconnect
+   - Confirm the LEDs still respond after reconnect, not just the coin listener
 3. On Pi: `sudo systemctl start narly-fortune` then `journalctl -u narly-fortune -f` to watch logs
 4. Reboot Pi — service should auto-start
 5. Full end-to-end on Pi with all hardware
