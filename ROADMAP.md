@@ -1,34 +1,67 @@
 # Roadmap
 
-Seeded from `docs/v2-upgrade-plan.md`, which remains the detailed reference. This file is the
-queue; the plan doc holds the wiring steps and verification detail.
+The queue. Reordered on 2026-09-22 from `_work/capture-measure-and-fix/discovery.md`, which
+reconciled `docs/v3-upgrade-plan.md` (the September audit) against two events of field
+experience. `docs/v2-upgrade-plan.md` and the V3 plan remain the detailed references; the V2
+and V3 item IDs are kept below so those documents stay navigable.
+
+Priority order: hear attendees reliably → Pi for the next event → refine → sensors.
+Target for the first two: **≥ 60% of attendees heard correctly** in a room with background
+conversation, measured rather than felt, on the Pi.
 
 ## Now
 
-Nothing in flight.
+**Increment 1 — `capture-measure-and-fix`.** Everything software-only that fits the current
+hardware gap (mic days away, Arduino dismantled). Discovery done; spec next.
+
+- Log the five capture failures distinctly and what was heard — the instrument that makes 60%
+  checkable. Absorbs V2 `3a`.
+- Fake mic replaying WAV fixtures, plus STT and LLM fakes, so a full run needs no hardware and
+  no API spend; lets others test remotely. Scoped-down V3 `0b`.
+- Cue and `listen()` start in the same instant — closes the ~2.8s dead window.
+- `energy_threshold` to the library default with adaptation re-enabled; never tested below 800.
+- Cross-platform playback replacing `afplay`, which dies silently on Linux. V2 `3d` / V3 `2d`.
 
 ## Next
 
-**Phase 3 — Raspberry Pi deployment.** Make Narly survive an unattended festival day and move
-it off the laptop.
+**Increment 2 — Live baseline.** When the directional mic arrives and the Arduino is rewired.
+New mic on a stand; record fixture clips (quiet room, conversation behind, leaning in); first
+measured success rate against the log from Increment 1.
 
-- `3a` Proper logging (`logger.py`) — replace `print()` with `logging`, stdout + rotating file
-- `3b` Watchdog wrapper — restart on crash, cap 10 restarts, reset after 5 min stable
-- `3c` Serial port recovery — reconnect loop when the Arduino USB drops; also fixes `led_client.py`'s stale `tty.` default port
-- `3d` Cross-platform audio — replace macOS-only `afplay` with a platform-detecting `play_sound()`
-- `3e` Fix `requirements.txt` — add `pyaudio` (needed on the Pi for mic access)
-- `3f` Pi deployment — `deploy/setup-pi.sh`, `deploy/narly-fortune.service`, `deploy/README.md`
+**Increment 3 — Pi port.** Critical path to the next event.
+
+- Persistent, size-capped journald — *not* volatile; post-event review needs the logs to
+  survive a power cut. V3 `3a`.
+- systemd unit with `Restart=always`. Replaces the V2 `3b` watchdog. V3 `3b`.
+- Single serial owner — one port open for the process lifetime, reader thread, reconnect with
+  backoff. Fixes the Uno DTR reset on every coin event (a day-one Linux defect) and absorbs
+  V2 `3c`, including `led_client.py`'s stale `tty.` default. V3 `0a`.
+- Stable device names by VID/PID and udev; audio devices by name. V3 `3d`.
+- `pyaudio` in `requirements.txt` while `SpeechRecognition` is still the capture path. V2 `3e`.
+- `deploy/` — setup script, unit file, journald drop-in, README. V2 `3f` / V3 `3e`.
+- Power budget: official 3 A supply; mic, Arduino, and printer share the USB bus. V3 `3f`.
+
+**Increment 4 — Endpointing and recognition.** Measured against the Increment 2 fixtures.
+
+- Silero VAD replaces energy-based endpointing, which cannot find a pause in noise. V3 `2a`.
+- Cloud STT (gpt-4o-transcribe or Deepgram) replacing the free Google endpoint, with a small
+  local fallback. Drops `SpeechRecognition`. V3 `2b`.
 
 ## Later
 
-**Phase 4 — PIR sensor, toggle switch, and hardening.** Deferred from the original Phase 2 when
-an event deadline trimmed it to LED wiring only. Do this after Phase 3 is stable.
+- Fortune bank fallback — only after logging exists, since it hides the one failure tell the
+  operator has today. V3 `1c`.
+- TTS readiness prompt, if the timed cues from Increment 1 prove insufficient. V3 `2e`.
+- Event loop and explicit state machine. Unblocks the sensor work. V3 `1a`–`1b`.
+- LLM refresh — current model, `max_tokens` 1500 → ~150, prompt caching. V3 `2c`.
+- Housekeeping: README paths, Arduino debug echoes, dead `textwrap3`, key rotation. V3 `0d`.
+- **Sensors and sketch rewrite — last.** PIR, toggle switches, full LED palette, wiring guide.
+  V2 `4a`–`4e` / V3 `4`–`5`.
 
-- `4a` State machine + serial protocol — 7 LED states, `PIR ON/OFF` and `SWITCH` messages
-- `4b` Rewrite the Arduino sketch — PIR on pin 4, two toggle switches on pins 7 & 8
-- `4c` `led_client.py` convenience methods + mode whitelist
-- `4d` `serial_trigger.py` — parse PIR/SWITCH, track operating mode, QUIET and DEBUG behaviour
-- `4e` Wiring guide (`arduino/README.md`) — beginner-friendly parts list and pin table
+## Dropped
+
+- **Custom watchdog wrapper** (V2 `3b`). The next event runs on the Pi; systemd restarts the
+  process with zero code. Not worth writing to throw away.
 
 ## Recently shipped
 
