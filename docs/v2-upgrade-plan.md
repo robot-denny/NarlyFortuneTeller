@@ -229,3 +229,5 @@ Add convenience methods: `idle()`, `shimmer()`, `listen()`, `think()`, `printing
 ### 4e. Wiring guide (`arduino/README.md`)
 
 Complete beginner-friendly reference: parts list, coin acceptor, LEDs, PIR, toggle switches, full pin table, per-component isolation tests.
+
+> **Started 2026-09-23.** `arduino/README.md` now documents the current build (pin table, rail map, PSU terminals, coin acceptor, LED strip) and the recommended change to take LED power off the breadboard. PIR, toggle switches, parts list, and isolation tests are still to be added when 4a–4d land.
