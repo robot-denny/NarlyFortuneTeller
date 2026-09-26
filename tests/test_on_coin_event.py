@@ -6,10 +6,10 @@ the persona's default question; one run where the attendee was heard must be
 recorded as `outcome=heard` with their exact words.
 
 No hardware is touched. The mic, the recognizer, and the OpenAI call are all
-replaced through `configure_providers`, the same seam `main()` uses. The
-speaker and the Arduino `LedClient` are silenced by the shared autouse fixture
-in `conftest.py`, which also loads the default persona and restores the module
-globals after each test.
+replaced through `configure_providers`, the same seam `main()` uses, and the
+speaker by a `FakeAudioOut` wired the same way. The Arduino `LedClient` is
+silenced by the shared fixture in `conftest.py`, which also loads the default
+persona and restores the module globals after each test.
 """
 
 import logging

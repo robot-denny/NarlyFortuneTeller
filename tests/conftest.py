@@ -25,17 +25,16 @@ class _NoLeds:
 
 @pytest.fixture
 def quiet_and_configured(monkeypatch):
-    """Load the default persona and silence the speaker and LEDs for a test.
+    """Load the default persona and silence the LEDs for a test.
 
-    `on_coin_event` still plays its sound cues through macOS `afplay` at this
-    step (the in-process player arrives in Step 7). Replacing it with a no-op
-    keeps the test run silent; production code is untouched. `LedClient` is
-    replaced for the same reason — see `_NoLeds`.
+    The speaker needs no stub here: `on_coin_event` plays sound only through the
+    `audio_out` provider, and every test wires a `FakeAudioOut` there, which
+    records the request and makes no sound. `LedClient` is replaced so the test
+    never touches the Arduino — see `_NoLeds`.
 
     The module globals the tests set (`_config` and the four providers) are put
     back afterwards, so no test file inherits what the last test wired.
     """
-    monkeypatch.setattr(serial_trigger, "afplay", lambda *args, **kwargs: None)
     monkeypatch.setattr(serial_trigger, "LedClient", lambda *args, **kwargs: _NoLeds())
     saved = (serial_trigger._config, serial_trigger._get_audio, serial_trigger._transcribe,
              serial_trigger._fortune, serial_trigger._audio_out)

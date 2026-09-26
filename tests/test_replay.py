@@ -4,9 +4,9 @@ Acceptance Criteria 4 and 5 made concrete: a recorded clip becomes audio the
 recognizer can consume, and the same typed question run twice produces the
 same log records while spending nothing (no OpenAI call, no Google call).
 
-The speaker and LEDs are silenced by the shared autouse fixture in
-`conftest.py`; the providers are wired exactly the way `main()` wires them for
-`--mode simulate --dry-run --offline --question "..."`.
+The LEDs are silenced by the shared fixture in `conftest.py`, and the speaker
+by wiring a `FakeAudioOut`; otherwise the providers are wired exactly the way
+`main()` wires them for `--mode simulate --dry-run --offline --question "..."`.
 """
 
 import argparse
@@ -19,7 +19,7 @@ import speech_recognition as sr
 
 import serial_trigger
 from capture_client import wav_get_audio
-from fakes import FakeFortune, FakeTranscriber, typed_get_audio
+from fakes import FakeAudioOut, FakeFortune, FakeTranscriber, typed_get_audio
 
 
 pytestmark = pytest.mark.usefixtures("quiet_and_configured")
@@ -74,7 +74,7 @@ def test_same_typed_question_twice_yields_identical_records_and_spends_nothing(c
         get_audio=typed_get_audio(QUESTION),
         transcribe=FakeTranscriber(QUESTION),
         fortune=fortune,
-        audio_out=None,
+        audio_out=FakeAudioOut(),  # main() wires PygameAudioOut; the fake keeps the test silent
     )
     caplog.set_level(logging.INFO)
 
@@ -108,7 +108,7 @@ def test_offline_alone_needs_no_microphone(caplog, log_lines):
     assert get_audio is not serial_trigger.mic_get_audio
     assert isinstance(fortune, FakeFortune)
 
-    serial_trigger.configure_providers(get_audio, transcribe, fortune, None)
+    serial_trigger.configure_providers(get_audio, transcribe, fortune, FakeAudioOut())
     caplog.set_level(logging.INFO)
     serial_trigger.on_coin_event(pulses=1, dry_run=True)
 

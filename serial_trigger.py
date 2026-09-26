@@ -1,11 +1,10 @@
 # serial_trigger.py - Orchestrates the full fortune-telling flow
-# Adds short audio cues (afplay) and fail-safe LED cues without changing core logic.
+# Adds short audio cues (pygame, via audio_out.py) and fail-safe LED cues without changing core logic.
 
 import os
 import sys
 import re
 import argparse
-import subprocess
 import serial
 import time
 import speech_recognition as sr
@@ -13,6 +12,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 from ai_client import get_ai_response, init_ai
+from audio_out import PygameAudioOut
 from capture_client import CaptureOutcome, capture_question, wav_get_audio
 from fakes import FakeFortune, FakeTranscriber, typed_get_audio
 from formatters import render_ticket
@@ -63,7 +63,7 @@ _config = None
 _get_audio = None    # callable(on_ready) -> sr.AudioData, or raises
 _transcribe = None   # callable(audio) -> str, or raises
 _fortune = None      # callable(question) -> str
-_audio_out = None    # object with .play(path, wait) — wired in a later step
+_audio_out = None    # object with .play(path, wait) — PygameAudioOut, or FakeAudioOut in tests
 
 
 def configure_providers(get_audio, transcribe, fortune, audio_out):
@@ -80,18 +80,6 @@ def configure_providers(get_audio, transcribe, fortune, audio_out):
 # ----------------------------------------
 # Helpers
 # ----------------------------------------
-def afplay(path: str, wait=False, volume=1.0):
-    """Play a short WAV/AIFF/MP3 via macOS 'afplay'. Never crash if missing."""
-    if not path or not Path(path).exists():
-        return
-    try:
-        if wait:
-            subprocess.run(["afplay", "-v", str(volume), path], check=False)  # Wait for completion
-        else:
-            subprocess.Popen(["afplay", "-v", str(volume), path])  # Fire and forget
-    except Exception:
-        pass
-
 def _flatten(value: str) -> str:
     """Make a string safe to sit inside key="value" on a one-line log record.
 
@@ -264,7 +252,7 @@ def on_coin_event(pulses: int, dry_run: bool = False):
     try:
         # A missing provider is a startup wiring bug, not a microphone fault.
         # Say so plainly instead of letting it surface as a misleading mic_error.
-        if _get_audio is None or _transcribe is None or _fortune is None:
+        if _get_audio is None or _transcribe is None or _fortune is None or _audio_out is None:
             raise RuntimeError("configure_providers() was not called before the first coin")
 
         # Step 1: Capture the question — show "listening".
@@ -273,7 +261,7 @@ def on_coin_event(pulses: int, dry_run: bool = False):
         result = capture_question(
             _get_audio,
             _transcribe,
-            on_ready=lambda: afplay(SFX_START, wait=True, volume=3.0),  # 2x louder (adjust 1.0-4.0)
+            on_ready=lambda: _audio_out.play(SFX_START, wait=True),  # blocks until the chime ends
             overall_timeout=TIMEOUT_RECORDING + 10,  # the same outer guard the old wrapper used
         )
         led.stop()
@@ -302,7 +290,7 @@ def on_coin_event(pulses: int, dry_run: bool = False):
 
         # Step 2: Generate fortune (with timeout) — show "thinking"
         led.start("PULSE")
-        afplay(SFX_END)  # Play generate sound to signal AI is working
+        _audio_out.play(SFX_END)  # Play generate sound to signal AI is working (does not block)
         fortune = generate_fortune_with_timeout(question)
         if not fortune:
             led.stop()
@@ -551,9 +539,9 @@ def main():
     log.info(f"Persona: {_config['_persona_name']}")
 
     # Pick the real mic/recognizer/AI or their stand-ins from the flags.
-    # (audio_out is wired in a later step.)
+    # The speaker is always the real player: it goes quiet by itself if there is no sound device.
     get_audio, transcribe, fortune = build_providers(args)
-    configure_providers(get_audio, transcribe, fortune, None)
+    configure_providers(get_audio, transcribe, fortune, PygameAudioOut())
 
     # Keep LED port aligned to main serial unless you override at runtime
     PORT = args.port or PORT
