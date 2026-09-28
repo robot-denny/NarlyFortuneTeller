@@ -13,8 +13,10 @@ conversation, measured rather than felt, on the Pi.
 
 **Increment 2 — Live baseline.** When the directional mic arrives and the Arduino is rewired.
 New mic on a stand; record fixture clips (quiet room, conversation behind, leaning in); first
-measured success rate against the log from Increment 1. A Fifine AM8 is standing in until the
-Samson Q20 arrives.
+measured success rate against the log from Increment 1. The Fifine AM8 is the chosen mic; the
+Samson Q20 is out of scope. Lean on purpose: a baseline and a repeatable replay set to track each
+iteration against, not a push to hit 60% before the event (Wednesday 2026-09-30). Spec:
+`_work/live-baseline/spec.md`.
 
 ## Next
 
@@ -29,6 +31,8 @@ Samson Q20 arrives.
 - Stable device names by VID/PID and udev; audio devices by name. V3 `3d`.
 - `deploy/` — setup script, unit file, journald drop-in, README. V2 `3f` / V3 `3e`.
 - Power budget: official 3 A supply; mic, Arduino, and printer share the USB bus. V3 `3f`.
+- Re-run Increment 2's replay set on the Pi, so the Pi's own audio path gets a score. The laptop
+  baseline doesn't carry over.
 
 **Increment 4 — Endpointing and recognition.** Measured against the Increment 2 fixtures.
 
