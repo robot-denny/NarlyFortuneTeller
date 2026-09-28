@@ -65,4 +65,4 @@ outcomes, the fakes in `fakes.py`, and the coin-event flow with stand-in provide
 Arduino, and printer are still verified by hand (see `## Build` and `docs/testing.md`). Two
 `DeprecationWarning`s from `SpeechRecognition` (`aifc`, `audioop`) are expected on every run.
 
-This convention was **set** by Step 1 of `_work/capture-measure-and-fix/plan.md`; new tests follow it.
+This convention was **set** by Step 1 of `_work/shipped/capture-measure-and-fix/plan.md`; new tests follow it.

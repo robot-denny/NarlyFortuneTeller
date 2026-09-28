@@ -1,6 +1,6 @@
 # Roadmap
 
-The queue. Reordered on 2026-09-22 from `_work/capture-measure-and-fix/discovery.md`, which
+The queue. Reordered on 2026-09-22 from `_work/shipped/capture-measure-and-fix/discovery.md`, which
 reconciled `docs/v3-upgrade-plan.md` (the September audit) against two events of field
 experience. `docs/v2-upgrade-plan.md` and the V3 plan remain the detailed references; the V2
 and V3 item IDs are kept below so those documents stay navigable.
@@ -11,22 +11,12 @@ conversation, measured rather than felt, on the Pi.
 
 ## Now
 
-**Increment 1 — `capture-measure-and-fix`.** Everything software-only that fits the current
-hardware gap (mic days away, Arduino dismantled). Discovery done; spec next.
-
-- Log the five capture failures distinctly and what was heard — the instrument that makes 60%
-  checkable. Absorbs V2 `3a`.
-- Fake mic replaying WAV fixtures, plus STT and LLM fakes, so a full run needs no hardware and
-  no API spend; lets others test remotely. Scoped-down V3 `0b`.
-- Cue and `listen()` start in the same instant — closes the ~2.8s dead window.
-- `energy_threshold` to the library default with adaptation re-enabled; never tested below 800.
-- Cross-platform playback replacing `afplay`, which dies silently on Linux. V2 `3d` / V3 `2d`.
-
-## Next
-
 **Increment 2 — Live baseline.** When the directional mic arrives and the Arduino is rewired.
 New mic on a stand; record fixture clips (quiet room, conversation behind, leaning in); first
-measured success rate against the log from Increment 1.
+measured success rate against the log from Increment 1. A Fifine AM8 is standing in until the
+Samson Q20 arrives.
+
+## Next
 
 **Increment 3 — Pi port.** Critical path to the next event.
 
@@ -37,7 +27,6 @@ measured success rate against the log from Increment 1.
   backoff. Fixes the Uno DTR reset on every coin event (a day-one Linux defect) and absorbs
   V2 `3c`, including `led_client.py`'s stale `tty.` default. V3 `0a`.
 - Stable device names by VID/PID and udev; audio devices by name. V3 `3d`.
-- `pyaudio` in `requirements.txt` while `SpeechRecognition` is still the capture path. V2 `3e`.
 - `deploy/` — setup script, unit file, journald drop-in, README. V2 `3f` / V3 `3e`.
 - Power budget: official 3 A supply; mic, Arduino, and printer share the USB bus. V3 `3f`.
 
@@ -65,6 +54,14 @@ measured success rate against the log from Increment 1.
 
 ## Recently shipped
 
+- **Increment 1 — Measure and fix attendee capture** (2026-09-28,
+  `_work/shipped/capture-measure-and-fix/`). Every fortune logs what was heard, or which of five
+  failures struck, and whether the question was substituted (V2 `3a`). A full fortune runs with
+  no hardware and no API spend, from typed text or a clip (scoped-down V3 `0b`); a colleague
+  confirmed it from `docs/testing.md` alone. Listening starts the instant the chime ends; the
+  threshold is the library default, adapting. Cues play in-process via pygame (V2 `3d` / V3
+  `2d`), and `pyaudio` is in `requirements.txt` (V2 `3e`). First pytest suite. Behavior is in
+  `_features/audio-capture.md`.
 - **Phase 2 — LED wiring + first boot** (2026-02-28). WS2812B strip wired to pin 6 via a 330Ω
   resistor, shared ground, `NUM_LEDS` 60 → 180, serial port corrected to `/dev/cu.usbmodem143301`.
   Verified in both dry-run and hardware mode. Scope was deliberately trimmed to LED wiring for a

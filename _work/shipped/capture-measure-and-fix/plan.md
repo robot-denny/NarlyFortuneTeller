@@ -1,6 +1,6 @@
 # Plan: Measure and Fix Attendee Capture
 
-**Spec**: `_work/capture-measure-and-fix/spec.md`
+**Spec**: `_work/shipped/capture-measure-and-fix/spec.md`
 **Branch**: `feature/capture-measure-and-fix`
 **Work type**: change-to audio-capture
 **Feature doc**: audio-capture
@@ -185,7 +185,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Establish the test harness
 
-> **Prompt**: Implement Step 1 of `_work/capture-measure-and-fix/plan.md`. This project has no
+> **Prompt**: Implement Step 1 of `_work/shipped/capture-measure-and-fix/plan.md`. This project has no
 > tests and no test runner; you are setting the convention. Create `requirements-dev.txt`
 > containing `pytest>=8,<9`. Create `pyproject.toml` with only a `[tool.pytest.ini_options]`
 > table: `testpaths = ["tests"]`, `pythonpath = ["."]`. Create `tests/__init__.py` (empty) and
@@ -211,7 +211,7 @@ later step that breaks config loading or the 32-char ticket fails here.
 
 ### Step 2 — Logging module, and replace `print()` in the orchestrator
 
-> **Prompt**: Implement Step 2 of `_work/capture-measure-and-fix/plan.md`. Create `logger.py` at
+> **Prompt**: Implement Step 2 of `_work/shipped/capture-measure-and-fix/plan.md`. Create `logger.py` at
 > the repo root exposing `configure_logging(log_file: str | None = None, level=logging.INFO)`
 > and `get_logger(name)`. `configure_logging` attaches a stdout `StreamHandler` always, with
 > format `%(asctime)s %(levelname)s %(message)s`; when `log_file` is given it also attaches a
@@ -249,7 +249,7 @@ later step that breaks config loading or the 32-char ticket fails here.
 
 ### Step 3 — Fakes: transcriber, fortune, audio-out
 
-> **Prompt**: Implement Step 3 of `_work/capture-measure-and-fix/plan.md`. Create `fakes.py` at
+> **Prompt**: Implement Step 3 of `_work/shipped/capture-measure-and-fix/plan.md`. Create `fakes.py` at
 > the repo root with three small classes. `FakeTranscriber(text=None, raises=None)`: callable
 > taking `audio` and returning `text`, or raising the exception instance in `raises` (tests will
 > pass `speech_recognition.UnknownValueError()` and `speech_recognition.RequestError("down")`).
@@ -273,7 +273,7 @@ is never busy.
 
 ### Step 4 — `capture_client.py`: six distinct outcomes
 
-> **Prompt**: Implement Step 4 of `_work/capture-measure-and-fix/plan.md`. Create
+> **Prompt**: Implement Step 4 of `_work/shipped/capture-measure-and-fix/plan.md`. Create
 > `capture_client.py` at the repo root. Define `CaptureOutcome` as an `Enum` with members
 > `HEARD, NO_SPEECH, NOT_UNDERSTOOD, RECOGNIZER_ERROR, MIC_ERROR, OVERRUN` whose values are the
 > lowercase strings `heard`, `no_speech`, `not_understood`, `recognizer_error`, `mic_error`,
@@ -305,7 +305,7 @@ outcome and none collapses into another. This is Acceptance Criterion 2's founda
 
 ### Step 5 — Wire capture into the orchestrator and log the record
 
-> **Prompt**: Implement Step 5 of `_work/capture-measure-and-fix/plan.md`. In
+> **Prompt**: Implement Step 5 of `_work/shipped/capture-measure-and-fix/plan.md`. In
 > `serial_trigger.py`: add module-level providers `_get_audio = None`, `_transcribe = None`,
 > `_fortune = None`, `_audio_out = None` beside `_config`, and a
 > `configure_providers(get_audio, transcribe, fortune, audio_out)` function that sets them.
@@ -356,7 +356,7 @@ run records the heard text. These are Acceptance Criteria 1 and 2 made concrete.
 
 ### Step 6 — Replay a clip or typed text, offline
 
-> **Prompt**: Implement Step 6 of `_work/capture-measure-and-fix/plan.md`. In
+> **Prompt**: Implement Step 6 of `_work/shipped/capture-measure-and-fix/plan.md`. In
 > `capture_client.py` add `wav_get_audio(path)` returning a one-arg callable `_(on_ready)` that
 > calls `on_ready()`, then opens `sr.AudioFile(path)` and returns `recognizer.record(source)`
 > (an `AudioData`) — calling `on_ready` keeps the tester's experience the same as an attendee's
@@ -397,7 +397,7 @@ spends nothing. Acceptance Criteria 4 and 5.
 
 ### Step 7 — In-process playback replacing `afplay`
 
-> **Prompt**: Implement Step 7 of `_work/capture-measure-and-fix/plan.md`. Add `pygame>=2.5,<3`
+> **Prompt**: Implement Step 7 of `_work/shipped/capture-measure-and-fix/plan.md`. Add `pygame>=2.5,<3`
 > AND `pyaudio>=0.2.14,<0.3` to `requirements.txt`, then `.venv/bin/pip install -r
 > requirements.txt`. `pyaudio` is what lets `sr.Microphone()` open at all — it is missing from the
 > venv today, so the real mic cannot open on this laptop and Step 8's manual check would be
@@ -439,7 +439,7 @@ degrades and logs rather than raising. Acceptance Criterion 8's software half.
 
 ### Step 8 — Sequencing and threshold
 
-> **Prompt**: Implement Step 8 of `_work/capture-measure-and-fix/plan.md`. In
+> **Prompt**: Implement Step 8 of `_work/shipped/capture-measure-and-fix/plan.md`. In
 > `serial_trigger.py`'s `mic_get_audio(on_ready, recognizer=None, mic=None)`: (1) REORDER so that
 > inside `with mic as source:` the sequence is `recognizer.adjust_for_ambient_noise(source,
 > duration=0.5)` → `on_ready()` → `return recognizer.listen(source, timeout=10,
@@ -476,7 +476,7 @@ listen; library threshold and adaptation untouched. Acceptance Criteria 6 and 7'
 
 ### Step 9 — Runbook, config slots, and dependency hygiene
 
-> **Prompt**: Implement Step 9 of `_work/capture-measure-and-fix/plan.md`. Documentation and
+> **Prompt**: Implement Step 9 of `_work/shipped/capture-measure-and-fix/plan.md`. Documentation and
 > config only; no behaviour changes. (1) Create `docs/testing.md`: how to run the tests
 > (`.venv/bin/pip install -r requirements-dev.txt`; `.venv/bin/python -m pytest -q`); how a
 > remote tester runs a fortune with no hardware (`--mode simulate --dry-run --offline --question

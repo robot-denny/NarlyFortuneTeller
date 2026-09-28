@@ -6,7 +6,7 @@
 
 branch: feature/capture-measure-and-fix
 design reference (if any): none
-discovery: `_work/capture-measure-and-fix/discovery.md` — framing, options, and open questions
+discovery: `_work/shipped/capture-measure-and-fix/discovery.md` — framing, options, and open questions
 are taken from there and not re-argued here.
 
 **Work type**: change-to audio-capture
@@ -45,7 +45,9 @@ lives here. Its `unattended-operation` feature doc is superseded — the read-ba
 - When Narly substitutes its own question for one it did not hear, that substitution is recorded
   as such, so a generic fortune can be traced to its cause afterwards.
 - Records carry a timestamp and a severity, and an operator can count outcomes across an event.
-- The operator's live view on the laptop behaves as it does today.
+- The operator's live view on the laptop shows every line with its time and severity. *(Reconciled
+  2026-09-28: this used to say the view "behaves as it does today". It doesn't: the blank lines
+  between cycles are gone, and the coin line marks where each fortune starts.)*
 
 **Reproducibility — Narly can run with nothing plugged in**
 
@@ -189,7 +191,7 @@ Scenario: Replaying a clip is repeatable
 ```scenario
 Scenario: An attendee who speaks on the cue is heard from the first word
   Given an attendee has learned to speak the moment the chime sounds
-  When they begin "Will I find treasure today?" as the chime starts
+  When they begin "Will I find treasure today?" as the chime ends
   Then the whole question is recorded, including "Will"
 ```
 
