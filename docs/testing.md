@@ -7,6 +7,17 @@ log afterwards and count how each fortune went.
 You don't need to know Python to follow it. Every command is spelled out. Type each one into a
 terminal exactly as shown.
 
+Three things to know before you start:
+
+- **Commands start with `.venv/bin/`, `brew`, `git`, `python3`, `say`, or `rm`.** Those are the
+  boxes you type. Boxes that follow the words "you'll see" show what Narly prints back. Don't type
+  those.
+- **Narly keeps running after each fortune.** It waits at `Press ENTER for coin →` for the next
+  coin. Anything you type there counts as a coin, even a whole command. Press **Ctrl+C** to stop
+  Narly before you type the next command.
+- **Some words are yours to fill in.** Where a command says `question.wav`, that is the name of a
+  file you make in the steps below.
+
 ## Quick start
 
 If Narly is already set up on your computer, this is the whole test:
@@ -39,9 +50,22 @@ keyboard it quits at the second prompt with an `EOFError`.
 python3 --version
 ```
 
-You need Python **3.12 or earlier** (3.10, 3.11, or 3.12). Narly's speech library doesn't work on
-Python 3.13 yet. If you see 3.13 or later, install Python 3.12 from python.org and use `python3.12`
-in place of `python3` in step 5.
+You need Python **3.10, 3.11, or 3.12**. Older versions can't read Narly's code, and Narly's speech
+library doesn't work on 3.13 or later yet.
+
+Macs come with Python **3.9**, which is too old, so on a Mac you will usually need this step. If
+you see anything other than 3.10, 3.11, or 3.12, install Python 3.12:
+
+```bash
+brew install python@3.12
+```
+
+(Without Homebrew, use the installer from python.org.) Then type `python3.12` in place of `python3`
+in step 5.
+
+If you already made the `.venv` folder with the wrong Python, delete it with `rm -rf .venv` and do
+step 5 again. The telltale error is `TypeError: unsupported operand type(s) for |` when you run the
+tests.
 
 ### 3. Install PortAudio
 
@@ -124,7 +148,7 @@ paper, because of `--dry-run`.
 ```
 
 Press **Enter** at `Press ENTER for coin →`. You'll hear the readiness chime if your computer has
-sound. Then you'll see this:
+sound. Then you'll see this (it's Narly's output, so don't type it):
 
 ```
 2026-09-28 11:58:46,322 INFO     💰 [COIN EVENT] pulses=1
@@ -167,15 +191,31 @@ Leave out `--question` and Narly uses the persona's usual question, "What is my 
 
 ### Replay a recording
 
-```bash
-.venv/bin/python serial_trigger.py --mode simulate --dry-run --offline --clip path/to/question.wav
-```
-
 `--clip` plays a recorded file into Narly in place of the microphone. It accepts WAV, AIFF, or FLAC.
 
+First make a recording. On a Mac you don't need a microphone for this: the built-in `say` command
+speaks a sentence into a file. Run it in the Narly folder:
+
+```bash
+say -o question.wav --data-format=LEI16@16000 "Should I take the job?"
+```
+
+That creates `question.wav` next to `serial_trigger.py`. Now replay it:
+
+```bash
+.venv/bin/python serial_trigger.py --mode simulate --dry-run --offline --clip question.wav
+```
+
+Press **Enter** at the prompt, then don't type anything else. Read what Narly prints: a good run
+has a line containing the words `capture outcome=heard` (that's Narly's output, not a command),
+followed by a `[TEST FORTUNE]` ticket, as in the typed run above. Press **Ctrl+C** when you're done.
+
 With `--offline`, the stand-in recognizer doesn't listen to the words in the file. It always
-reports the persona's usual question. So an offline clip run tests that Narly can read the file, not
-what it hears in it. A file Narly can't read gives a `mic_error` line, like this:
+reports the persona's usual question, "What is my fortune for today?", so that is what the log
+shows. (`--question` can't be combined with `--clip`.) So an offline clip run tests that Narly can
+read the file, not what it hears in it. If Narly says `--clip file not found`, check the file name
+and that you are in the Narly folder. A file Narly
+can't read gives a `mic_error` line instead, and you'll see something like this:
 
 ```
 2026-09-28 11:59:14,008 WARNING  capture outcome=mic_error heard="" secs=2.0 detail="Audio file could not be read as PCM WAV, AIFF/AIFF-C, or Native FLAC; check if file is corrupted or in another format"
@@ -197,15 +237,23 @@ differ from run to run. Only offline runs give the same result every time.
 
 ### Testing with the real microphone
 
-This is hardware testing for the owner, not part of the remote test. Narly listens on your
-computer's default input. To use the USB microphone, first choose it under **System Settings →
-Sound → Input** on a Mac. Then run the command without `--offline` or `--question`:
+This is hardware testing for the owner, not part of the remote test. **It needs a `.env` file with
+an OpenAI key**, because it makes real fortunes, and each one costs a little.
+
+Without a `.env`, listening still works: the log shows what Narly heard. Then the fortune fails
+with `AI error: Missing credentials` and Narly prints its fallback slip ("Narly drifted off in the
+currents..."). That is Narly handling the missing key correctly, not a fault.
+
+Narly listens on your computer's default input. To use the USB microphone, first choose it under
+**System Settings → Sound → Input** on a Mac. Then run the command without `--offline` or
+`--question`:
 
 ```bash
 .venv/bin/python serial_trigger.py --mode simulate --dry-run
 ```
 
-This makes real fortunes, so it needs the `.env` file and costs a little per fortune.
+The first time, your Mac asks whether Terminal may use the microphone. Say yes. That question is
+why the first run takes a few seconds longer.
 
 If you stay silent at a quiet desk, Narly logs `not_understood`, not `no_speech`. That is expected
 and not a fault. In a quiet room, Narly's listening level drops until the microphone's own faint
