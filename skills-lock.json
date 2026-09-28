@@ -5,7 +5,7 @@
       "source": "robot-denny/cantrip",
       "sourceType": "github",
       "skillPath": "skills/core/reference/bdd-principles/SKILL.md",
-      "computedHash": "c91f97e89b8ee1c837fde2184efb0c0f8c151f54fa239dfbb51a7e3fe2479480"
+      "computedHash": "288bbcecf57ae2b2a41f014390834db8560f2a5274cc3a1735121e5e54dc1eba"
     },
     "code-review": {
       "source": "robot-denny/cantrip",
@@ -17,7 +17,7 @@
       "source": "robot-denny/cantrip",
       "sourceType": "github",
       "skillPath": "skills/core/spellbook/commit-message/SKILL.md",
-      "computedHash": "72841d1b893d0447073e131a29ce258f63b310d1d546885edc5295ef245db462"
+      "computedHash": "b4538ab9626e390eb62998f2baa554cd96b645ca01f9682500ff128498bdbfd1"
     },
     "design-system-authoring": {
       "source": "robot-denny/cantrip",
@@ -41,7 +41,7 @@
       "source": "robot-denny/cantrip",
       "sourceType": "github",
       "skillPath": "skills/core/spellbook/implement-step/SKILL.md",
-      "computedHash": "064cc7a606d27faa1caa6c5f4a73a1a119839a54bf798c779e043fcfb1caa61e"
+      "computedHash": "92193a7b2f35e53d9970fa5b53c497999f8b6fa3d716cf660042262821a78f0a"
     },
     "memory-discipline": {
       "source": "robot-denny/cantrip",
@@ -53,7 +53,7 @@
       "source": "robot-denny/cantrip",
       "sourceType": "github",
       "skillPath": "skills/core/spellbook/plan/SKILL.md",
-      "computedHash": "bd3b44b95b9eb374ac227767d6bf95e84bb1aab877bcaee54b8012e395438260"
+      "computedHash": "8ea58cd725d56dc81146c245e772acc2bdc9c0d3b8f5cce4283ca06edad5c1bd"
     },
     "prose-discipline": {
       "source": "robot-denny/cantrip",
@@ -107,7 +107,7 @@
       "source": "robot-denny/cantrip",
       "sourceType": "github",
       "skillPath": "skills/core/spellbook/update-toolkit/SKILL.md",
-      "computedHash": "c7d81b551e54dddd8656789682f9b0f4fb121876013f64162dafdbbee42006f2"
+      "computedHash": "db13ae98623e57e9fd58c528ce81e17e7dc7ef37fc670d6283107258903a8cb0"
     },
     "workflow": {
       "source": "robot-denny/cantrip",
