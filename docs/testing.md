@@ -88,8 +88,9 @@ python3 -m venv .venv
 The first line installs what Narly needs to run. The second adds `pytest`, the tool that runs the
 automated tests. Only testers and developers need it.
 
-You don't need a `.env` file or an OpenAI key for anything on this page. Those are only for real
-fortunes.
+You don't need a `.env` file or an OpenAI key for the tests or for an offline run. Two things
+further down do need one, and say so: replaying a clip without `--offline`, and testing with the
+real microphone.
 
 ## Run the automated tests
 
@@ -135,6 +136,8 @@ sound. Then you'll see this:
 
 --- DRY RUN OUTPUT ---
 
+
+
         - Your Fortune -
 --------------------------------
 [TEST FORTUNE] You will find
@@ -142,11 +145,18 @@ what you seek.
 --------------------------------
             - Narly
 
+
+
+
+
 --- END DRY RUN ---
 
 2026-09-28 11:58:48,267 INFO     ✓ Fortune cycle complete
 Press ENTER for coin →
 ```
+
+The empty lines around the ticket are real. A thermal printer feeds blank paper before and after
+each fortune so it can be torn off cleanly, and the dry run shows that too.
 
 Press Enter again for another fortune, or **Ctrl+C** to stop.
 

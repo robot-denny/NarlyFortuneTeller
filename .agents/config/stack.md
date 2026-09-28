@@ -51,8 +51,9 @@ smoke-tested on the device.
 
 `pytest` is the runner. It is a development-only dependency in `requirements-dev.txt`, kept out of
 `requirements.txt` so it never lands on the Pi. Tests live in `tests/test_<module>.py`, or
-`test_<flow>.py` for a flow across modules (e.g. `test_sequencing.py`). `pyproject.toml` → `[tool.pytest.ini_options]` sets `testpaths = ["tests"]`
-and `pythonpath = ["."]`, so the flat root modules import without packaging.
+`test_<flow>.py` for a flow across modules (e.g. `test_sequencing.py`). `pyproject.toml` →
+`[tool.pytest.ini_options]` sets `testpaths = ["tests"]` and `pythonpath = ["."]`, so the flat
+root modules import without packaging.
 
 ```bash
 .venv/bin/pip install -r requirements-dev.txt   # once

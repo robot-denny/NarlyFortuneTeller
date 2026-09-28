@@ -56,9 +56,9 @@ though no automated command covers it.
 ### Grouping sub-phases into one increment
 
 One sub-phase per increment is the default, not a rule. **Group adjacent sub-phases into a
-single increment when they share a verification session.** There is no test suite here — every
-check is a manual run, often needing specific hardware — so verification, not lines of code, is
-what an increment actually costs. Two sub-phases that are checked in the same sitting, on the
+single increment when they share a verification session.** The pytest suite covers only the
+hardware-free paths; the checks that matter most are still manual runs, often needing specific
+hardware — so verification, not lines of code, is what an increment actually costs. Two sub-phases that are checked in the same sitting, on the
 same hardware, are one increment; splitting them buys nothing and pays for the setup twice.
 
 Group on these, in order:
