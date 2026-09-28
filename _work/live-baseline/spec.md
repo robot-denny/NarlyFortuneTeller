@@ -118,7 +118,7 @@ None. No visual surface changes. The physical change is the mic's mount and posi
 - **Conversation wakes Narly before the volunteer speaks.** The saved clip then holds crowd noise
   and part of the question. It scores as a miss, which is exactly what an attendee would get.
 - **A volunteer goes off script** ("Will I find treasure?" when the script says "…today?"). It
-  scores as a miss. The volunteer can re-ask, and the script number is not reused.
+  scores as a miss. The volunteer can re-ask under the same script number, and the last attempt counts.
 - **The recognizer is unreachable** during the session or a replay. Those runs are reported
   separately and excluded from the hearing score.
 - **A near-perfect transcript** ("will i find treasure to day") scores as a miss under the

@@ -1,0 +1,61 @@
+id,condition,question
+1,quiet,Will I find treasure today?
+2,quiet,Should I take the job?
+3,quiet,Will my team win this year?
+4,quiet,Is love waiting around the corner?
+5,quiet,Should I move to a new city?
+6,quiet,Will I travel somewhere warm soon?
+7,quiet,What does the ocean hold for me?
+8,quiet,Will my garden grow this summer?
+9,quiet,Should I learn to play guitar?
+10,quiet,Is good luck coming my way?
+11,quiet,Will I meet an old friend again?
+12,quiet,Should I start my own business?
+13,quiet,What will tomorrow bring me?
+14,quiet,Will my project launch on time?
+15,quiet,Should I adopt a dog?
+16,quiet,Am I on the right path?
+17,quiet,Will I win the raffle tonight?
+18,quiet,Should I trust my instincts?
+19,quiet,What adventure is waiting for me?
+20,quiet,Will the weather be kind to me?
+21,conversation,Will I find treasure today?
+22,conversation,Should I take the job?
+23,conversation,Will my team win this year?
+24,conversation,Is love waiting around the corner?
+25,conversation,Should I move to a new city?
+26,conversation,Will I travel somewhere warm soon?
+27,conversation,What does the ocean hold for me?
+28,conversation,Will my garden grow this summer?
+29,conversation,Should I learn to play guitar?
+30,conversation,Is good luck coming my way?
+31,conversation,Will I meet an old friend again?
+32,conversation,Should I start my own business?
+33,conversation,What will tomorrow bring me?
+34,conversation,Will my project launch on time?
+35,conversation,Should I adopt a dog?
+36,conversation,Am I on the right path?
+37,conversation,Will I win the raffle tonight?
+38,conversation,Should I trust my instincts?
+39,conversation,What adventure is waiting for me?
+40,conversation,Will the weather be kind to me?
+41,leaning,Will I find treasure today?
+42,leaning,Should I take the job?
+43,leaning,Will my team win this year?
+44,leaning,Is love waiting around the corner?
+45,leaning,Should I move to a new city?
+46,leaning,Will I travel somewhere warm soon?
+47,leaning,What does the ocean hold for me?
+48,leaning,Will my garden grow this summer?
+49,leaning,Should I learn to play guitar?
+50,leaning,Is good luck coming my way?
+51,leaning,Will I meet an old friend again?
+52,leaning,Should I start my own business?
+53,leaning,What will tomorrow bring me?
+54,leaning,Will my project launch on time?
+55,leaning,Should I adopt a dog?
+56,leaning,Am I on the right path?
+57,leaning,Will I win the raffle tonight?
+58,leaning,Should I trust my instincts?
+59,leaning,What adventure is waiting for me?
+60,leaning,Will the weather be kind to me?
