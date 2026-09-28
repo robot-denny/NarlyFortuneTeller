@@ -7,10 +7,24 @@ The rule is mechanical on purpose. It ignores letter case and punctuation and
 nothing else, so every iteration is scored the same way and the success rate
 can be compared from one session to the next. Do not make it fuzzier: a rule
 that drifts would make old and new numbers impossible to compare.
+
+It also replays saved clips through the recognizer (the `replay` subcommand).
+A replay never generates a fortune: this module does not import or call
+`ai_client`, so no OpenAI call can happen and a replay costs nothing but the
+free speech-to-text request. (The real recognizer is borrowed from
+`serial_trigger`, which loads `ai_client` as a module, but nothing here ever
+asks it for a fortune.)
 """
 
+import argparse
+import csv
 import re
+import sys
+import wave
 from dataclasses import dataclass, field
+from pathlib import Path
+
+from capture_client import capture_question, wav_get_audio
 
 _NOT_LETTER_DIGIT_OR_SPACE = re.compile(r"[^a-z0-9 ]")
 _RUN_OF_SPACES = re.compile(r" +")
@@ -165,3 +179,153 @@ def to_markdown(summary: Summary, title: str) -> str:
             )
 
     return "\n".join(lines) + "\n"
+
+
+# --- Reading a live session --------------------------------------------------
+
+# During a measuring session Narly logs "clip id=<label>" before it listens,
+# then one "capture outcome=..." line once it has an answer. These patterns
+# read those lines; the capture line's format is fixed, so they stay simple.
+_CLIP_LABEL = re.compile(r"\bclip id=(\S+)")
+_OUTCOME = re.compile(r"outcome=(\S+)")
+_HEARD = re.compile(r'heard="([^"]*)"')
+
+
+def _read_script(script_path) -> list[dict[str, str]]:
+    """Read the question script: one dict per row, with id, condition, question."""
+    with open(script_path, newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def clip_seconds(path: Path) -> float | None:
+    """How long a saved clip lasts, in seconds, or None if there is no clip."""
+    if not path.exists():
+        return None
+    with wave.open(str(path), "rb") as wav:
+        return wav.getnframes() / wav.getframerate()
+
+
+def live_rows(log_path, script_path, clips_dir) -> list[Row]:
+    """Turn a session's log into one Row per script question that was asked.
+
+    Each "clip id=<label>" line is paired with the next "capture outcome="
+    line. If a question was asked twice (a volunteer's re-ask), the last try
+    counts. Rows come back in script order.
+    """
+    script = _read_script(script_path)
+    known_ids = {entry["id"] for entry in script}
+    results: dict[str, tuple[str, str | None]] = {}  # label -> (outcome, heard)
+
+    pending_label = None
+    with open(log_path, encoding="utf-8") as log:
+        for line in log:
+            label_match = _CLIP_LABEL.search(line)
+            if label_match:
+                pending_label = label_match.group(1)
+                continue
+            if "capture outcome=" in line and pending_label is not None:
+                outcome = _OUTCOME.search(line).group(1)
+                heard_match = _HEARD.search(line)
+                heard = heard_match.group(1) if heard_match else None
+                if pending_label in known_ids:
+                    results[pending_label] = (outcome, heard)
+                else:
+                    print(
+                        f"Skipping clip id={pending_label}: it is not in the script.",
+                        file=sys.stderr,
+                    )
+                pending_label = None
+
+    clips = Path(clips_dir)
+    rows = []
+    for entry in script:
+        if entry["id"] not in results:
+            continue
+        outcome, heard = results[entry["id"]]
+        rows.append(
+            Row(
+                id=entry["id"],
+                condition=entry["condition"],
+                asked=entry["question"],
+                outcome=outcome,
+                heard=heard,
+                clip_seconds=clip_seconds(clips / f"{entry['id']}.wav"),
+            )
+        )
+    return rows
+
+
+# --- Replaying saved clips ---------------------------------------------------
+
+
+def replay_rows(clips_dir, script_path, transcribe=None) -> tuple[list[Row], list[str]]:
+    """Send each script question's saved clip through the recognizer again.
+
+    Returns one Row per script question that has a clip (<clips_dir>/<id>.wav),
+    in script order, plus the ids that have no clip. Only the recognizer runs:
+    no fortune is ever asked for.
+    """
+    if transcribe is None:
+        # Imported here, not at the top, so tests can pass a fake recognizer
+        # without loading the orchestrator.
+        from serial_trigger import google_transcribe
+
+        transcribe = google_transcribe
+
+    clips = Path(clips_dir)
+    rows = []
+    no_clip = []
+    for entry in _read_script(script_path):
+        path = clips / f"{entry['id']}.wav"
+        if not path.exists():
+            no_clip.append(entry["id"])
+            continue
+        result = capture_question(wav_get_audio(str(path)), transcribe)
+        rows.append(
+            Row(
+                id=entry["id"],
+                condition=entry["condition"],
+                asked=entry["question"],
+                outcome=result.outcome.value,
+                heard=result.text,
+                clip_seconds=clip_seconds(path),
+            )
+        )
+    return rows, no_clip
+
+
+# --- Command line -------------------------------------------------------------
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        description="Score how often Narly heard the script's questions correctly."
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    live = commands.add_parser(
+        "live", help="score a measuring session from its log file"
+    )
+    live.add_argument("log", help="the session's log file (from --log-file)")
+    live.add_argument("script", help="the question script, e.g. docs/baseline-script.csv")
+    live.add_argument("--clips", required=True, help="folder the session saved its clips in")
+
+    replay = commands.add_parser(
+        "replay", help="send saved clips through the recognizer again and score them"
+    )
+    replay.add_argument("clips", help="folder of saved clips, named <id>.wav")
+    replay.add_argument("script", help="the question script, e.g. docs/baseline-script.csv")
+
+    args = parser.parse_args(argv)
+    if args.command == "live":
+        rows = live_rows(args.log, args.script, args.clips)
+        print(to_markdown(score(rows), "Live"), end="")
+    elif args.command == "replay":
+        rows, no_clip = replay_rows(args.clips, args.script)
+        print(to_markdown(score(rows), "Replay"), end="")
+        # The blank line ends the Markdown list, so this is not read as part of its last bullet.
+        print(f"\nNo clip: {', '.join(no_clip) if no_clip else 'none'}")
+
+
+if __name__ == "__main__":
+    main()

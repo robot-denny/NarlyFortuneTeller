@@ -7,6 +7,8 @@ microphone here is always a lambda: no test opens a real mic.
 
 import argparse
 import logging
+import subprocess
+import sys
 import wave
 
 import pytest
@@ -68,3 +70,34 @@ def test_a_normal_run_uses_the_bare_microphone_and_saves_nothing():
     get_audio, _, _ = serial_trigger.build_providers(args)
 
     assert get_audio is serial_trigger.mic_get_audio
+
+
+def test_save_clips_with_auto_is_refused_before_anything_runs(tmp_path):
+    """--auto types no question number, so every clip would land as None.wav and
+    overwrite the last. The combination is refused at startup instead.
+    (--dry-run and the short timeout keep a regression from printing or lingering.)"""
+    result = subprocess.run(
+        [sys.executable, "serial_trigger.py", "--mode", "simulate", "--dry-run", "--auto",
+         "--save-clips", str(tmp_path / "clips")],
+        capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 2, result.stderr
+    assert "--auto" in result.stderr and "--save-clips" in result.stderr
+    assert not (tmp_path / "clips").exists()
+
+
+@pytest.mark.parametrize("typed, count, expected", [
+    ("27", 0, ("27", 0)),   # a typed question number is used as it is
+    ("", 0, ("1", 1)),      # blank takes the next number
+    ("", 4, ("5", 5)),
+    ("1 2", 0, ("1", 1)),   # a space would save one name and score another
+    ("../x", 2, ("3", 3)),  # a path separator would save outside the folder
+])
+def test_the_typed_label_or_the_next_number_names_the_clip(typed, count, expected):
+    assert serial_trigger.pick_clip_label(typed, count) == expected
+
+
+def test_an_unusable_label_is_named_in_a_warning(caplog):
+    with caplog.at_level(logging.WARNING):
+        serial_trigger.pick_clip_label("1 2", 0)
+    assert any("1 2" in m and "clip 1" in m for m in _messages(caplog))

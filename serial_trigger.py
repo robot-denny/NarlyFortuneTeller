@@ -375,6 +375,23 @@ def listen_serial_mode(port: str, dry_run: bool = False):
     finally:
         ser.close()
 
+def pick_clip_label(typed: str, clip_count: int) -> tuple[str, int]:
+    """Name the next clip from what was typed at the coin prompt.
+
+    Returns the label and the updated count. A typed question number is used
+    as it is. A blank line takes the next number. So does a label with a space
+    or a slash: a space would save the clip under one name and score it under
+    another, and a slash would save it outside the clips folder. That case is
+    logged as a WARNING, so the session log shows which number was used instead.
+    """
+    if typed and not any(c.isspace() or c in "/\\" for c in typed):
+        return typed, clip_count
+    clip_count += 1
+    if typed:
+        log.warning(f'⚠️  Label "{typed}" has a space or slash; saving as clip {clip_count}')
+    return str(clip_count), clip_count
+
+
 def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10, save_clips: bool = False):
     """Simulate coin events for testing without hardware.
 
@@ -409,11 +426,7 @@ def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10,
             while True:
                 typed = input("Press ENTER for coin → ").strip()
                 if save_clips:
-                    if typed:
-                        _clip_label = typed
-                    else:
-                        clip_count += 1
-                        _clip_label = str(clip_count)
+                    _clip_label, clip_count = pick_clip_label(typed, clip_count)
                 on_coin_event(pulses=1, dry_run=dry_run)
         except KeyboardInterrupt:
             log.info("🛑 Exiting simulation mode.")
@@ -562,7 +575,7 @@ def main():
             "Simulate only, for a measuring session. Save what the microphone heard on each coin "
             "as DIR/<label>.wav. Type the script's question number at the coin prompt before "
             "ENTER to set the label; a blank line takes the next number. Use with --log-file so "
-            "the session can be scored. Cannot be combined with --offline, --clip, or --question."
+            "the session can be scored. Cannot be combined with --offline, --clip, --question, or --auto."
         )
     )
 
@@ -574,6 +587,9 @@ def main():
     if args.save_clips and (args.offline or args.clip or args.question):
         parser.error("--save-clips cannot be combined with --offline, --clip, or --question: "
                      "only live microphone audio is worth saving")
+    if args.save_clips and args.auto:
+        parser.error("--save-clips cannot be combined with --auto: each clip is named by the "
+                     "question number typed at the coin prompt")
     if args.clip and not os.path.isfile(args.clip):
         parser.error(f"--clip file not found: {args.clip}")
     configure_logging(args.log_file)
