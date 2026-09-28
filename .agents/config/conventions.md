@@ -108,8 +108,11 @@ bundle, not the checks.
 - **The Arduino sketch has no automated build.** No `arduino-cli` is installed. Any `.ino`
   change needs a manual IDE flash and an on-device smoke test — plan that as an explicit step,
   because no command in `stack.md` will catch a broken sketch.
-- **There is no test suite.** Every verification step is a manual run. A plan cannot lean on a
-  RED→GREEN signal that does not exist; say what you will observe by hand instead.
+- **A pytest suite covers the hardware-free paths only.** Config loading, formatting, logging,
+  capture outcomes, and the coin-event flow with stand-in providers have a RED→GREEN signal
+  (`.venv/bin/python -m pytest -q`, see `stack.md` → *Tests*). The hardware paths (mic, Arduino,
+  printer) remain manual: a plan cannot lean on a test for them, so say what you will observe by
+  hand instead.
 
 ## Implementation rules
 
