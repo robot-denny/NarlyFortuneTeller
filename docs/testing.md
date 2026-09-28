@@ -259,6 +259,8 @@ If you stay silent at a quiet desk, Narly logs `not_understood`, not `no_speech`
 and not a fault. In a quiet room, Narly's listening level drops until the microphone's own faint
 hiss counts as someone starting to speak. Festival rooms are never that quiet.
 
+To measure how often Narly hears volunteers correctly at the booth, follow [capture-baseline.md](capture-baseline.md).
+
 ## Read the log
 
 Every fortune writes two lines that say how listening went. The first line says what happened:

@@ -14,3 +14,6 @@ _scratch/
 
 # Reviewer agent memory — per-machine calibration, not source (matches cantrip)
 .claude/agent-memory/
+
+# Measuring-session clips and logs — volunteers' voices and words, never committed
+clips/

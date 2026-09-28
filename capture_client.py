@@ -34,6 +34,7 @@ one-line stand-in inside a test.
 """
 
 import time
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
@@ -41,6 +42,9 @@ from enum import Enum
 
 import speech_recognition as sr
 
+from logger import get_logger
+
+log = get_logger(__name__)
 
 class CaptureOutcome(Enum):
     """What happened when we tried to hear the attendee. The string values are
@@ -160,5 +164,44 @@ def wav_get_audio(path):
         on_ready()
         with sr.AudioFile(path) as source:
             return sr.Recognizer().record(source)
+
+    return _
+
+
+def clip_saving_get_audio(inner, directory, label_source):
+    """Wrap a ``get_audio`` provider so every clip it hears is kept on disk.
+
+    Used by ``serial_trigger.py --save-clips DIR`` during a measuring session,
+    so the same clips can be replayed later and every iteration scored alike.
+
+    ``inner`` is the real provider (normally the microphone). ``directory`` is
+    where clips go; it is created if missing. ``label_source()`` returns this
+    run's label, the script's question number, and names the file
+    ``<directory>/<label>.wav``.
+
+    The log gets ``clip id=<label>`` BEFORE the microphone opens, so a run that
+    ends without audio (nobody spoke, the mic failed) is still labelled and the
+    scorer can pair it with its ``capture`` line. When audio comes back it is
+    written out and ``clip saved id=<label> path=<path>`` is logged.
+
+    Nothing about the audio or the errors changes: the same audio object is
+    returned, and any exception from ``inner`` passes straight through with
+    nothing saved. If the file cannot be written, a WARNING says why and the
+    audio is still returned, so the fortune goes ahead.
+    """
+
+    def _(on_ready):
+        label = label_source()
+        log.info(f"clip id={label}")
+        audio = inner(on_ready)
+        path = Path(directory) / f"{label}.wav"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(audio.get_wav_data())
+        except Exception as e:
+            log.warning(f"clip not saved id={label}: {_describe(e)}")
+        else:
+            log.info(f"clip saved id={label} path={path}")
+        return audio
 
     return _

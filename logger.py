@@ -11,6 +11,7 @@
 
 import logging
 import logging.handlers
+import os
 import sys
 
 # One line per event, e.g.:
@@ -77,7 +78,9 @@ def configure_logging(log_file: str | None = None, level=logging.INFO):
     if log_file:
         # A bad path (typo, unmounted drive, no permission) must not take the whole
         # program down before the first coin. Stay on stdout and say what happened.
+        # The log's folder may not exist yet (clips/ on a fresh checkout), so make it.
         try:
+            os.makedirs(os.path.dirname(log_file) or ".", exist_ok=True)
             file_handler = logging.handlers.RotatingFileHandler(
                 log_file, maxBytes=MAX_BYTES, backupCount=BACKUP_COUNT, encoding="utf-8"
             )
