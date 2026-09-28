@@ -345,7 +345,10 @@ tests added to `tests/test_baseline.py`.
 > - **Running the session**: in a plain terminal, not through Claude, run
 >   `.venv/bin/python serial_trigger.py --mode simulate --dry-run --save-clips clips --log-file clips/session.log`.
 >   At each coin prompt, type the question's id from the script, press Enter, and have the
->   volunteer ask it after the chime ends. Conditions go in id order. If a volunteer goes off
+>   volunteer ask it after the chime ends. Volunteers say the question exactly as written, without
+>   "Narly" first: the scoring is word for word, and Google hears the name as "gnarly", so a
+>   perfectly heard question would score as a miss. This is only for the session; attendees can
+>   say anything. Conditions go in id order. If a volunteer goes off
 >   script, re-type the same id and ask again (the last attempt counts). Note it needs `.env`,
 >   because each coin makes a real fortune. For the chime check: during the conversation block, a
 >   volunteer at the attendee's spot says clearly, faintly, or not at all. Note early wake-ups seen.
