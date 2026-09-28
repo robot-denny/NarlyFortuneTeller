@@ -108,11 +108,20 @@ def mic_get_audio(on_ready, recognizer=None, mic=None):
     one-line lambda stands in for this function.
 
     `capture_client.capture_question` calls this as `get_audio(on_ready)`.
-    It opens the microphone, calibrates for room noise, and listens for one
-    phrase, returning the audio for `google_transcribe`. It raises the same
+    It opens the microphone, calibrates for room noise, plays the readiness
+    chime (`on_ready`, which blocks until the chime ends), and then listens for
+    one phrase, returning the audio for `google_transcribe`. It raises the same
     exceptions the mic path always has (`sr.WaitTimeoutError` when nobody
     spoke; anything else when the mic itself failed) — `capture_client` turns
     those into the six named outcomes, so nothing is caught here.
+
+    The order matters. Calibration runs BEFORE the chime, while the attendee
+    has not been cued yet, so no words are lost to it. Listening starts on the
+    very next line after the chime ends, because that is when attendees start
+    talking. (Listening during the chime would record the chime as speech.)
+
+    The wake threshold is left at the speech library's default (300, adapting
+    to the room as it goes).
 
     The microphone is created INSIDE this function on purpose: if PyAudio is
     missing, `sr.Microphone()` raises here, inside the capture stage, and is
@@ -125,19 +134,16 @@ def mic_get_audio(on_ready, recognizer=None, mic=None):
     recognizer = recognizer or sr.Recognizer()
     mic = mic or sr.Microphone()
 
-    # Play sound first - signals mic is about to be ready
-    on_ready()
-
-    log.info("  🎤 Listening for question...")
     with mic as source:
-        # Quick ambient noise calibration while sound plays
-        recognizer.adjust_for_ambient_noise(source, duration=0.8)
-        # Settings tuned for noisy environments
+        # Quick ambient noise calibration BEFORE the chime - the attendee
+        # hasn't been cued yet, so nothing they say is missed
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
         recognizer.pause_threshold = 1.5  # Allow pauses while thinking through question
-        recognizer.energy_threshold = 1100  # Lower threshold to capture speech
-        recognizer.dynamic_energy_threshold = False  # Use fixed threshold
+        log.info("  🎤 Calibrated — chime, then listening for question...")
 
-        # Mic is ready now, listen for speech
+        # Play the chime; this returns only once it has finished
+        on_ready()
+        # Listen the instant the chime ends - nothing may go between these two lines
         return recognizer.listen(source, timeout=10, phrase_time_limit=8)
 
 def google_transcribe(audio):

@@ -244,6 +244,26 @@ Carried from discovery, with two added while writing scenarios.
 - **Does the default threshold with adaptation wake on background conversation?** The fixtures
   answer this. If yes, the "wakes to an ordinary voice" rule is in tension with the noise case,
   and that tension is what the next increment's VAD resolves.
+  - *First live check, 2026-09-28 (Step 8, Fifine AM8 USB dynamic mic — a stand-in while the
+    Samson Q20 is procured; quiet room, arm's length, conversational volume, laptop speaker).*
+    Spoken question: `outcome=heard heard="gnarly will I find your tooth" secs=7.9` — heard, and
+    the transcript begins with the first word. Silence: `outcome=not_understood heard=""
+    secs=9.8 detail="UnknownValueError"`, **not** the expected `no_speech`. A true `no_speech`
+    would log ~12.4 s (0.5 calibrate + 1.9 chime + 10 wait), so something tripped the threshold
+    after the chime ended. A repeat on the speaker gave the same result; one run on headphones
+    gave `no_speech secs=12.6`.
+  - *Measured, same day (mic loudness every 21 ms after the chime, quiet room, two clean runs
+    that agreed).* **The chime's tail is not the cause:** its loudest reading after pygame
+    reports done was 24–27 against a silent-room level of ~15 and a calibrated threshold of
+    ~132. **Adaptation is:** replaying the readings through the library's own formula
+    (`threshold → 1.5 × heard energy`, while waiting), the threshold fell from ~132 to ~22 —
+    just above the mic's own hiss — and that hiss first counted as speech at ~2.4 s, then
+    repeatedly. So in a truly quiet room, silence logs `not_understood`, not `no_speech`; the
+    headphone run's `no_speech` was most likely chance. A pause after the chime would not help.
+    **Decision (owner): record it, no code change.** A festival hall is never this quiet, and
+    the next increment's VAD replaces the energy threshold. The runbook should say that desk
+    silence logs `not_understood`. (An earlier, non-quiet run showed tail readings of 100–230
+    and a calibrated threshold of ~390, from laptop activity in the room.)
 - **What is causing the occasional hangs?** Not to be guessed. This increment's log should let
   the next one say.
 - **Should fakes and fixes be one increment or two?** The argument for one: the fakes are what

@@ -148,14 +148,21 @@ replacing it is the next increment.
   (default `MAX_WAIT_SECONDS = 5.0`, against a 1.96 s chime), stops the sound, and logs
   `sfx stuck: <path>`. Without it a speaker that never reports "finished" would freeze the booth:
   `capture_question`'s 25 s guard decides the outcome but still waits for its worker thread.
+- **Decided at Step 8's manual check** (AM8 USB dynamic mic, 2026-09-28). Speech at arm's length
+  logged `heard` with the first word intact. Silence at a quiet desk logs `not_understood`, not
+  `no_speech`: with adaptation on, the threshold falls to ~1.5 × the mic's own hiss within ~2 s,
+  and the hiss then counts as speech starting. Measured, not guessed — see the spec's
+  threshold open question. No code change (owner's call): festival rooms are never that quiet,
+  and VAD replaces the threshold next increment. Step 9's runbook must say desk silence logs
+  `not_understood`, so a tester doesn't take it for a fault.
 - **Carried forward from Step 7's review** (Pi increment): `pygame.mixer.init()` runs once in
   `main()` with no timeout, so a Linux audio stack that hangs on init would stop Narly starting at
   all. Verify on the Pi alongside the pygame/mic device-contention check; bound it only if it is
   seen to hang. Also at the booth: with the `-v 3.0` boost gone, confirm the readiness chime — the
   cue that tells a guest to speak — is audible over room noise at the real speaker volume.
 - **Carried forward from Step 5's review** (Increment 4, recognizer): inside the 25 s guard,
-  worst-case chime (1.96 s) + calibration (0.8 s) + `listen` (10 s wait + 8 s phrase) leaves
-  ~4.2 s for the Google round-trip, and `recognize_google` has no timeout of its own. Slow
+  worst-case chime (1.96 s) + calibration (0.5 s since Step 8) + `listen` (10 s wait + 8 s phrase) leaves
+  ~4.5 s for the Google round-trip, and `recognize_google` has no timeout of its own. Slow
   festival Wi-Fi can legitimately produce `overrun`. Pre-existing; weigh it when the recognizer
   changes.
 - **Carried forward from Step 3's review** (Pi increment): `audioop` is removed in Python 3.13
