@@ -82,8 +82,8 @@ a measuring session the owner runs at the booth.
   committed. `condition` is one of `quiet`, `conversation`, `leaning`. The same 20 questions are
   asked in each condition: ids 1–20 quiet, 21–40 conversation, 41–60 leaning. That is the lean
   choice: one list to write, and the three conditions stay directly comparable.
-- **Clips live in `clips/` at the repo root.** `.gitignore` already has `*.wav`, so no ignore
-  rule is added and a clip can't be committed by accident. They are copied to the Pi when the Pi
+- **Clips live in `clips/` at the repo root.** `.gitignore` ignores the whole folder, so
+  neither a clip nor a session log (which holds volunteers' words) can be committed by accident. They are copied to the Pi when the Pi
   port re-runs the set, which is already in the roadmap's Increment 3.
 - **Replayed clips can only measure the recognizer, never the endpointing.** A saved clip starts
   when listening started and stops where endpointing stopped it. This is accepted in the spec
@@ -355,8 +355,8 @@ tests added to `tests/test_baseline.py`.
 > - **Scoring**: `.venv/bin/python baseline.py live clips/session.log docs/baseline-script.csv --clips clips`
 >   and `.venv/bin/python baseline.py replay clips docs/baseline-script.csv`.
 > - **Re-running later**: after any change, replay the same `clips/` against the same script. Copy
->   `clips/` to the Pi for the Pi-port rerun. The clips are volunteers' voices, are never
->   committed, and `*.wav` is already git-ignored.
+>   `clips/` to the Pi for the Pi-port rerun. The clips are volunteers' voices and the log
+>   holds their words, so neither is ever committed; `clips/` is git-ignored.
 > - **Results**: an empty dated-entry template with the setup, the conditions, the Live and Replay
 >   Markdown blocks, the chime verdict, and early wake-ups noted. Future entries are added
 >   underneath.
