@@ -1,10 +1,10 @@
 # serial_trigger.py - Orchestrates the full fortune-telling flow
-# Adds short audio cues (afplay) and fail-safe LED cues without changing core logic.
+# Adds short audio cues (pygame, via audio_out.py) and fail-safe LED cues without changing core logic.
 
+import os
 import sys
 import re
 import argparse
-import subprocess
 import serial
 import time
 import speech_recognition as sr
@@ -12,9 +12,15 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 from ai_client import get_ai_response, init_ai
+from audio_out import PygameAudioOut
+from capture_client import CaptureOutcome, capture_question, wav_get_audio
+from fakes import FakeFortune, FakeTranscriber, typed_get_audio
 from formatters import render_ticket
 from print_client import print_ticket
 from config_loader import load_config, list_personas
+from logger import configure_logging, get_logger
+
+log = get_logger(__name__)
 
 # ---- Optional LED client (safe no-op if missing) ----
 try:
@@ -48,20 +54,40 @@ LED_PORT = PORT  # override with --port if you use a separate LED Arduino
 # ---- Module-level config (set at startup by main()) ----
 _config = None
 
+# ---- Module-level providers (set at startup by main(), or by a test) ----
+# These are the four things Narly needs that involve hardware or the network:
+# a way to get audio from the mic, a way to turn it into text, a way to ask for
+# a fortune, and a way to play sound. main() plugs in the real ones; a test (or
+# later, `--mode simulate --offline`) plugs in the stand-ins from fakes.py. The
+# rest of this file calls them through these names and never knows which it got.
+_get_audio = None    # callable(on_ready) -> sr.AudioData, or raises
+_transcribe = None   # callable(audio) -> str, or raises
+_fortune = None      # callable(question) -> str
+_audio_out = None    # object with .play(path, wait) — PygameAudioOut, or FakeAudioOut in tests
+
+
+def configure_providers(get_audio, transcribe, fortune, audio_out):
+    """Set the four providers above. Call once at startup, or from a test.
+
+    Same pattern as `_config`: a plain module-level assignment, no framework.
+    """
+    global _get_audio, _transcribe, _fortune, _audio_out
+    _get_audio = get_audio
+    _transcribe = transcribe
+    _fortune = fortune
+    _audio_out = audio_out
+
 # ----------------------------------------
 # Helpers
 # ----------------------------------------
-def afplay(path: str, wait=False, volume=1.0):
-    """Play a short WAV/AIFF/MP3 via macOS 'afplay'. Never crash if missing."""
-    if not path or not Path(path).exists():
-        return
-    try:
-        if wait:
-            subprocess.run(["afplay", "-v", str(volume), path], check=False)  # Wait for completion
-        else:
-            subprocess.Popen(["afplay", "-v", str(volume), path])  # Fire and forget
-    except Exception:
-        pass
+def _flatten(value: str) -> str:
+    """Make a string safe to sit inside key="value" on a one-line log record.
+
+    Collapses any whitespace runs (including line breaks) to single spaces and
+    swaps double quotes for single, so an attendee's words or an error message
+    can never split an event across lines or break the key="value" shape."""
+    return " ".join(str(value).split()).replace('"', "'")
+
 
 def find_port():
     """Try to auto-detect an Arduino-like serial device if --port not provided."""
@@ -77,71 +103,72 @@ def find_port():
 # ----------------------------------------
 # Recording / Transcription
 # ----------------------------------------
-def record_and_transcribe():
-    """Record audio from microphone and transcribe to text."""
-    recognizer = sr.Recognizer()
-    mic = sr.Microphone()
+def mic_get_audio(on_ready, recognizer=None, mic=None):
+    """The REAL microphone provider. There is no FakeMic class — in tests a
+    one-line lambda stands in for this function.
 
-    # Play sound first - signals mic is about to be ready
-    afplay(SFX_START, wait=True, volume=3.0)  # 2x louder (adjust 1.0-4.0)
+    `capture_client.capture_question` calls this as `get_audio(on_ready)`.
+    It opens the microphone, calibrates for room noise, plays the readiness
+    chime (`on_ready`, which blocks until the chime ends), and then listens for
+    one phrase, returning the audio for `google_transcribe`. It raises the same
+    exceptions the mic path always has (`sr.WaitTimeoutError` when nobody
+    spoke; anything else when the mic itself failed) — `capture_client` turns
+    those into the six named outcomes, so nothing is caught here.
 
-    print("  🎤 Listening for question...")
-    try:
-        with mic as source:
-            # Quick ambient noise calibration while sound plays
-            recognizer.adjust_for_ambient_noise(source, duration=0.8)
-            # Settings tuned for noisy environments
-            recognizer.pause_threshold = 1.5  # Allow pauses while thinking through question
-            recognizer.energy_threshold = 1100  # Lower threshold to capture speech
-            recognizer.dynamic_energy_threshold = False  # Use fixed threshold
+    The order matters. Calibration runs BEFORE the chime, while the attendee
+    has not been cued yet, so no words are lost to it. Listening starts on the
+    very next line after the chime ends, because that is when attendees start
+    talking. (Listening during the chime would record the chime as speech.)
 
-            # Mic is ready now, listen for speech
-            audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
+    The wake threshold is left at the speech library's default (300, adapting
+    to the room as it goes).
 
-        print("  🧠 Transcribing...")
-        text = recognizer.recognize_google(audio)
-        print(f"  ✓ Question: {text}")
-        return text
-    except sr.WaitTimeoutError:
-        print("  ⚠ No speech detected (timeout)")
-        return None
-    except sr.UnknownValueError:
-        print("  ⚠ Could not understand audio")
-        return None
-    except sr.RequestError as e:
-        print(f"  ⚠ Speech recognition error: {e}")
-        return None
-    except Exception as e:
-        print(f"  ⚠ Microphone error: {e}")
-        return None
+    The microphone is created INSIDE this function on purpose: if PyAudio is
+    missing, `sr.Microphone()` raises here, inside the capture stage, and is
+    correctly recorded as `mic_error` rather than surfacing as a vague
+    "unexpected error" outside it.
 
-def record_and_transcribe_with_timeout():
-    """Wrapper to enforce timeout on recording/transcription."""
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(record_and_transcribe)
-        try:
-            # Wait for recording + transcription to complete
-            # The inner function handles its own timeout (WaitTimeoutError)
-            return future.result(timeout=TIMEOUT_RECORDING + 10)  # Extra time for transcription
-        except TimeoutError:
-            print(f"  ⚠ Total timeout exceeded - force stopping")
-            return None
-        except Exception as e:
-            print(f"  ⚠ Unexpected error during recording: {e}")
-            return None
+    `recognizer` and `mic` can be passed in for testing; by default the real
+    ones are created.
+    """
+    recognizer = recognizer or sr.Recognizer()
+    mic = mic or sr.Microphone()
+
+    with mic as source:
+        # Quick ambient noise calibration BEFORE the chime - the attendee
+        # hasn't been cued yet, so nothing they say is missed
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        recognizer.pause_threshold = 1.5  # Allow pauses while thinking through question
+        log.info("  🎤 Calibrated — chime, then listening for question...")
+
+        # Play the chime; this returns only once it has finished
+        on_ready()
+        # Listen the instant the chime ends - nothing may go between these two lines
+        return recognizer.listen(source, timeout=10, phrase_time_limit=8)
+
+def google_transcribe(audio):
+    """The REAL recognizer provider — what `FakeTranscriber` stands in for.
+
+    Sends the captured audio to Google's free speech-to-text and returns the
+    words. Raises `sr.UnknownValueError` when it hears no words and
+    `sr.RequestError` when the service cannot be reached; `capture_client`
+    maps those to `not_understood` and `recognizer_error`.
+    """
+    log.info("  🧠 Transcribing...")
+    return sr.Recognizer().recognize_google(audio)
 
 # ----------------------------------------
 # AI generation
 # ----------------------------------------
 def generate_fortune(question: str) -> str:
     """Call AI to generate fortune response."""
-    print("  🔮 Generating fortune...")
+    log.info("  🔮 Generating fortune...")
     try:
-        fortune = get_ai_response(question)
-        print(f"  ✓ Fortune generated ({len(fortune)} chars)")
+        fortune = _fortune(question)
+        log.info(f"  ✓ Fortune generated ({len(fortune)} chars)")
         return fortune
     except Exception as e:
-        print(f"  ⚠ AI error: {e}")
+        log.warning(f"  ⚠ AI error: {e}")
         return None
 
 def generate_fortune_with_timeout(question: str):
@@ -151,10 +178,10 @@ def generate_fortune_with_timeout(question: str):
         try:
             return future.result(timeout=TIMEOUT_AI)
         except TimeoutError:
-            print(f"  ⚠ AI timeout ({TIMEOUT_AI}s exceeded)")
+            log.warning(f"  ⚠ AI timeout ({TIMEOUT_AI}s exceeded)")
             return None
         except Exception as e:
-            print(f"  ⚠ Unexpected error during AI generation: {e}")
+            log.warning(f"  ⚠ Unexpected error during AI generation: {e}")
             return None
 
 # ----------------------------------------
@@ -162,7 +189,7 @@ def generate_fortune_with_timeout(question: str):
 # ----------------------------------------
 def print_fortune(fortune: str, dry_run: bool = False):
     """Format and print fortune ticket."""
-    print("  🖨️  Printing fortune...")
+    log.info("  🖨️  Printing fortune...")
     try:
         ticket = render_ticket(fortune, _config)
         if dry_run:
@@ -171,9 +198,9 @@ def print_fortune(fortune: str, dry_run: bool = False):
             print("--- END DRY RUN ---\n")
         else:
             print_ticket(ticket)
-            print("  ✓ Printed successfully")
+            log.info("  ✓ Printed successfully")
     except Exception as e:
-        print(f"  ⚠ Print error: {e}")
+        log.warning(f"  ⚠ Print error: {e}")
         raise
 
 def print_fortune_with_timeout(fortune: str, dry_run: bool = False):
@@ -183,10 +210,10 @@ def print_fortune_with_timeout(fortune: str, dry_run: bool = False):
         try:
             future.result(timeout=TIMEOUT_PRINT)
         except TimeoutError:
-            print(f"  ⚠ Print timeout ({TIMEOUT_PRINT}s exceeded)")
+            log.warning(f"  ⚠ Print timeout ({TIMEOUT_PRINT}s exceeded)")
             raise
         except Exception as e:
-            print(f"  ⚠ Unexpected error during printing: {e}")
+            log.warning(f"  ⚠ Unexpected error during printing: {e}")
             raise
 
 def print_fallback(dry_run: bool = False):
@@ -194,7 +221,7 @@ def print_fallback(dry_run: bool = False):
     fallback_msg = "Narly drifted off in the currents... try again in a moment."
     ticket = render_ticket(fallback_msg, _config)
 
-    print("  ⚠ Printing fallback message.")
+    log.warning("  ⚠ Printing fallback message.")
     if dry_run:
         print("\n--- FALLBACK (DRY RUN) ---")
         print(ticket)
@@ -205,13 +232,13 @@ def print_fallback(dry_run: bool = False):
             with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(print_ticket, ticket)
                 future.result(timeout=TIMEOUT_PRINT)
-            print("  ✓ Fallback printed")
+            log.info("  ✓ Fallback printed")
         except TimeoutError:
-            print(f"  ✗ Fallback print timeout ({TIMEOUT_PRINT}s) - showing on console:")
+            log.error(f"  ✗ Fallback print timeout ({TIMEOUT_PRINT}s) - showing on console:")
             print("\n" + ticket + "\n")
         except Exception as e:
-            print(f"  ✗ Could not print fallback: {e}")
-            print("  → Showing fallback on console instead:")
+            log.error(f"  ✗ Could not print fallback: {e}")
+            log.info("  → Showing fallback on console instead:")
             print("\n" + ticket + "\n")
 
 # ----------------------------------------
@@ -223,24 +250,53 @@ def on_coin_event(pulses: int, dry_run: bool = False):
     Flow: coin → record → transcribe → generate → print
     All steps have timeout protection.
     """
-    print(f"\n💰 [COIN EVENT] pulses={pulses}")
+    log.info(f"💰 [COIN EVENT] pulses={pulses}")
 
     # Create a safe LED client (no-op if not available)
     led = LedClient(LED_PORT, BAUD)
 
     try:
-        # Step 1: Record and transcribe (with timeout) — show "listening"
+        # A missing provider is a startup wiring bug, not a microphone fault.
+        # Say so plainly instead of letting it surface as a misleading mic_error.
+        if _get_audio is None or _transcribe is None or _fortune is None or _audio_out is None:
+            raise RuntimeError("configure_providers() was not called before the first coin")
+
+        # Step 1: Capture the question — show "listening".
+        # capture_question never raises; it always hands back one of six outcomes.
         led.start("GLOW")
-        question = record_and_transcribe_with_timeout()
+        result = capture_question(
+            _get_audio,
+            _transcribe,
+            on_ready=lambda: _audio_out.play(SFX_START, wait=True),  # blocks until the chime ends
+            overall_timeout=TIMEOUT_RECORDING + 10,  # the same outer guard the old wrapper used
+        )
         led.stop()
 
-        if not question:
+        # One greppable line per capture, e.g.
+        #   capture outcome=no_speech heard="" secs=10.3 detail="listening timed out"
+        # Count a day's failures with:  grep -c 'outcome=no_speech' narly.log
+        # Every quoted value goes through _flatten so the record stays one line.
+        heard = _flatten(result.text or "")
+        capture_line = f'capture outcome={result.outcome.value} heard="{heard}" secs={result.seconds:.1f}'
+        if result.detail is not None:
+            capture_line += f' detail="{_flatten(result.detail)}"'
+        if result.outcome is CaptureOutcome.HEARD:
+            log.info(capture_line)
+        else:
+            log.warning(capture_line)
+
+        # Decide by the OUTCOME, not by whether text happens to be non-empty, so
+        # this line can never disagree with the `capture outcome=` line above.
+        if result.outcome is CaptureOutcome.HEARD:
+            question = result.text
+            log.info(f'question source=heard text="{_flatten(question)}"')
+        else:
             question = _config.get("default_question", "What is my fortune?") if _config else "What is my fortune?"
-            print(f"  → Using default question: {question}")
+            log.info(f'question source=substituted text="{_flatten(question)}"')
 
         # Step 2: Generate fortune (with timeout) — show "thinking"
         led.start("PULSE")
-        afplay(SFX_END)  # Play generate sound to signal AI is working
+        _audio_out.play(SFX_END)  # Play generate sound to signal AI is working (does not block)
         fortune = generate_fortune_with_timeout(question)
         if not fortune:
             led.stop()
@@ -250,14 +306,14 @@ def on_coin_event(pulses: int, dry_run: bool = False):
         # Step 3: Print (with timeout)
         try:
             print_fortune_with_timeout(fortune, dry_run)
-            print("✓ Fortune cycle complete\n")
+            log.info("✓ Fortune cycle complete")
         except Exception:
             print_fallback(dry_run)
         finally:
             led.stop()
 
     except Exception as e:
-        print(f"  ✗ Unexpected error in coin event handler: {e}")
+        log.error(f"  ✗ Unexpected error in coin event handler: {e}")
         print_fallback(dry_run)
     finally:
         led.stop()
@@ -268,17 +324,17 @@ def on_coin_event(pulses: int, dry_run: bool = False):
 # ----------------------------------------
 def listen_serial_mode(port: str, dry_run: bool = False):
     """Listen for COIN X messages from Arduino on serial port."""
-    print(f"🔌 Hardware mode: Listening on {port} @ {BAUD}...")
-    print("   Waiting for coin insertion...\n")
+    log.info(f"🔌 Hardware mode: Listening on {port} @ {BAUD}...")
+    log.info("   Waiting for coin insertion...")
 
     ser = serial.Serial(port, BAUD, timeout=1)
     line_re = re.compile(r"^\s*COIN\s+(\d+)\s*$")
 
     # Allow Arduino to settle and ignore spurious signals during boot
-    print("   Initializing Arduino...")
+    log.info("   Initializing Arduino...")
     time.sleep(3)
     ser.reset_input_buffer()  # Clear any buffered boot messages
-    print("   Ready!\n")
+    log.info("   Ready!")
 
     first_coin_ignored = False  # Flag to ignore first spurious coin signal
 
@@ -291,14 +347,14 @@ def listen_serial_mode(port: str, dry_run: bool = False):
 
             # Skip Arduino boot/ready messages
             if "ready" in raw.lower() or "arduino" in raw.lower():
-                print(f"[arduino] {raw}")
+                log.info(f"[arduino] {raw}")
                 continue
 
             m = line_re.match(raw)
             if m:
                 # Ignore the first COIN signal (likely spurious from boot)
                 if not first_coin_ignored:
-                    print(f"[arduino] Ignoring first coin signal: {raw}")
+                    log.info(f"[arduino] Ignoring first coin signal: {raw}")
                     first_coin_ignored = True
                     continue
 
@@ -307,39 +363,80 @@ def listen_serial_mode(port: str, dry_run: bool = False):
             else:
                 # Optional debug output
                 if raw:
-                    print(f"[arduino] {raw}")
+                    log.info(f"[arduino] {raw}")
     except KeyboardInterrupt:
-        print("\n\n🛑 Exiting serial mode.")
+        log.info("🛑 Exiting serial mode.")
     finally:
         ser.close()
 
 def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10):
     """Simulate coin events for testing without hardware."""
-    print("🎮 Simulation mode")
+    log.info("🎮 Simulation mode")
 
     # Reset LEDs to DIM on startup (clears any leftover state from previous session)
-    print("   Initializing LEDs...")
+    log.info("   Initializing LEDs...")
     led_init = LedClient(LED_PORT, BAUD)
     led_init.stop()
     led_init.close()
-    print("   LEDs ready\n")
+    log.info("   LEDs ready")
     if auto:
-        print(f"   Auto-triggering every {interval} seconds (Ctrl+C to stop)\n")
+        log.info(f"   Auto-triggering every {interval} seconds (Ctrl+C to stop)")
         try:
             while True:
-                print("[AUTO] Simulating coin insertion...")
+                log.info("[AUTO] Simulating coin insertion...")
                 on_coin_event(pulses=1, dry_run=dry_run)
                 time.sleep(interval)
         except KeyboardInterrupt:
-            print("\n\n🛑 Exiting simulation mode.")
+            log.info("🛑 Exiting simulation mode.")
     else:
-        print("   Press ENTER to simulate coin insertion (Ctrl+C to stop)\n")
+        log.info("   Press ENTER to simulate coin insertion (Ctrl+C to stop)")
         try:
             while True:
                 input("Press ENTER for coin → ")
                 on_coin_event(pulses=1, dry_run=dry_run)
         except KeyboardInterrupt:
-            print("\n\n🛑 Exiting simulation mode.")
+            log.info("🛑 Exiting simulation mode.")
+
+def build_providers(args):
+    """Choose the microphone, recognizer, and fortune source for this run.
+
+    Hardware mode and plain simulate mode get the real ones. The simulate-only
+    flags swap in stand-ins:
+
+    - ``--clip PATH``   replays a recording instead of listening on the mic.
+    - ``--question T``  skips the mic and recognizer entirely and uses T.
+    - ``--offline``     replaces the recognizer and the fortune service so no
+      network is used. With neither --clip nor --question it also replaces the
+      mic with the persona's default question typed in, so an offline run needs
+      no hardware at all — that is what a remote tester with nothing plugged in
+      is for.
+
+    Returns ``(get_audio, transcribe, fortune)`` ready for ``configure_providers``.
+    Separate from main() so a test can check the flag logic directly.
+    """
+    get_audio, transcribe, fortune = mic_get_audio, google_transcribe, get_ai_response
+    default_question = _config.get("default_question", "What is my fortune?") if _config else "What is my fortune?"
+    question_text = args.question or default_question
+
+    if args.clip:
+        get_audio = wav_get_audio(args.clip)
+        log.info(f"Replaying clip instead of the microphone: {args.clip}")
+    elif args.question or args.offline:
+        get_audio = typed_get_audio(question_text)
+        log.info(f'Using typed question instead of the microphone: "{question_text}"')
+
+    if args.question or args.offline:
+        # Typed text is not audio, so the recognizer must be the stand-in that
+        # simply hands the same words back. Offline uses it too, so nothing is
+        # sent to Google even when a clip is being replayed.
+        transcribe = FakeTranscriber(question_text)
+
+    if args.offline:
+        fortune = FakeFortune()
+        log.info("Offline: speech-to-text and fortune are stand-ins; no network calls will be made")
+
+    return get_audio, transcribe, fortune
+
 
 # ----------------------------------------
 # CLI
@@ -387,8 +484,53 @@ def main():
         action="store_true",
         help="List available personas and exit"
     )
+    parser.add_argument(
+        "--log-file",
+        default=None,
+        help="Also write log lines to this file (rotates at 5 MB, keeps 3 backups). Stdout is always on."
+    )
+
+    # ---- Simulate-mode replay flags (all require --mode simulate) ----
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help=(
+            "Simulate only. Run a whole fortune with no microphone, no network, and no API spend: "
+            "the speech-to-text and fortune services are replaced by stand-ins, and the fortune is "
+            "marked [TEST FORTUNE]. On its own it uses the persona's default question, typed in; "
+            "add --question to type your own, or --clip to replay a recording through the fake "
+            "recognizer."
+        )
+    )
+    replay = parser.add_mutually_exclusive_group()
+    replay.add_argument(
+        "--clip",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Simulate only. Replay a recorded WAV/AIFF/FLAC file instead of listening on the "
+            "microphone. Without --offline the real Google recognizer transcribes it and the real "
+            "fortune is generated (one OpenAI call); with --offline neither service is contacted. "
+            "Cannot be combined with --question."
+        )
+    )
+    replay.add_argument(
+        "--question",
+        metavar="TEXT",
+        default=None,
+        help=(
+            "Simulate only. Skip the microphone and recognizer and use TEXT as the attendee's "
+            "question. Without --offline the REAL fortune is generated for it (one OpenAI call) - "
+            "a quick way to type a question and see what Narly answers. Cannot be combined with --clip."
+        )
+    )
 
     args = parser.parse_args()
+    if args.mode != "simulate" and (args.offline or args.clip or args.question):
+        parser.error("--offline/--clip/--question are only valid with --mode simulate")
+    if args.clip and not os.path.isfile(args.clip):
+        parser.error(f"--clip file not found: {args.clip}")
+    configure_logging(args.log_file)
 
     # List personas and exit if requested
     if args.list_personas:
@@ -400,7 +542,12 @@ def main():
     # Load persona config once at startup
     _config = load_config(args.persona)
     init_ai(args.persona)
-    print(f"Persona: {_config['_persona_name']}")
+    log.info(f"Persona: {_config['_persona_name']}")
+
+    # Pick the real mic/recognizer/AI or their stand-ins from the flags.
+    # The speaker is always the real player: it goes quiet by itself if there is no sound device.
+    get_audio, transcribe, fortune = build_providers(args)
+    configure_providers(get_audio, transcribe, fortune, PygameAudioOut())
 
     # Keep LED port aligned to main serial unless you override at runtime
     PORT = args.port or PORT
@@ -409,8 +556,8 @@ def main():
     if args.mode == "hardware":
         port = args.port or find_port()
         if not port:
-            print("❌ Could not auto-detect serial port.")
-            print("   Use --port to specify manually, e.g.: --port /dev/cu.usbmodem143101")
+            log.error("❌ Could not auto-detect serial port.")
+            log.error("   Use --port to specify manually, e.g.: --port /dev/cu.usbmodem143101")
             sys.exit(1)
         listen_serial_mode(port, dry_run=args.dry_run)
     else:

@@ -10,7 +10,9 @@ Python sends `START <mode>` / `STOP`. Event-day reliability is the governing con
 has paid a coin, so every failure path still prints a fallback slip, and the app must run with
 no hardware attached under `--mode simulate --dry-run`.
 
-There is no test suite and no automated build, so reviews are the main quality gate.
+A pytest suite (`.venv/bin/python -m pytest -q`) covers the hardware-free paths — capture outcomes,
+logging, cue order, offline replay, ticket width. The mic, Arduino, and printer are still checked
+by hand, and there is no CI, so reviews remain the main quality gate for hardware behaviour.
 
 ## Reviewer names
 

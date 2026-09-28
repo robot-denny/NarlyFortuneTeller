@@ -4,3 +4,5 @@ python-escpos
 openai
 pyserial>=3.5,<4.0
 SpeechRecognition
+pygame>=2.5,<3
+pyaudio>=0.2.14,<0.3

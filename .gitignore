@@ -11,3 +11,6 @@ __pycache__/
 
 # Toolkit scratch — disposable, never committed
 _scratch/
+
+# Reviewer agent memory — per-machine calibration, not source (matches cantrip)
+.claude/agent-memory/

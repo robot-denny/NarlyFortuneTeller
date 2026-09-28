@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1110" width="1600" height="1110" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTphNDMwYTFlYi00Y2EzLTQyMDItOTdmZS1lMzE2NGQ5YmMxMTQAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaJUxkjB3ckxL4G++BaqlixcAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDpiZmYzNzJlMS02ZDZlLTQ3MDYtYTRiNC01OWE0MzAzMGY0YTRscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNo3Gw05Yys2nGu3it02QhdqAAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggcsd9Z4tCtBg86D0Vh+hMRQCy9faIS0xJIXbWUR/3m0ekZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaId6540RgbGc3sKDXqu2+eQAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRNAAAAAAAAAAAAAAAAAGRoYXNoWCCKvIYtkj5wgBbU7IakN8kYvG+ZXCbVbu2ZKRuy0N5dZmRuYW1lbmp1bWJmIG1hbmlmZXN0amV4Y2x1c2lvbnOBomVzdGFydBj+Zmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOmE0MzBhMWViLTRjYTMtNDIwMi05N2ZlLWUzMTY0ZDliYzExNC9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjNhOTQ5MTRkLTExYTUtNGNlOS1hZDI1LTVmZWEwNDExZjEwYnJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCByx31ni0K0GDzoPRWH6ExFALL19ohLTEkhdtZRH/ebR6JjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggZ1K6RoJoNss/K3Cq/CiaLHE7SBAORXZx65o52B0gtXWiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggsQQ4R4uY2YT8BGMhMA5U5Uh8xqcDwQzVCFhoupbG5d50Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQKFHMpYUcMf93TJ5cKsdMgxpppwFHPRLXkM86xpHTWznZuzomGMQAme8um4DjDX4c2Ab3oukyg30cMesk6BHj7M=</c2pa:manifest></metadata>
+  <title>Narly fortune controller wiring schematic (as built 2026-09-23)</title>
+  <desc>Arduino Uno on USB power; S-100-5 5V 20A supply feeding the breadboard top rail and a WS2812B strip through the rail; 12V wall adapter feeding an HX-916 coin acceptor through a barrel-jack adapter; all grounds common on the breadboard top negative rail. D2 reads the coin signal through 110 ohms; D6 drives LED data through 330 ohms. Arduino 5V pin unconnected.</desc>
+  <style>
+    .w   { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .p5  { stroke: #c62828; }
+    .gnd { stroke: #1b1b1b; }
+    .v12 { stroke: #e07b00; }
+    .dat { stroke: #00897b; }
+    .sig { stroke: #1e5bb8; }
+    .ac  { stroke: #7a7a7a; }
+    .usb { stroke: #7a7a7a; stroke-dasharray: 7 4; }
+    .box { fill: #f7f7f5; stroke: #2b2b2b; stroke-width: 2; }
+    .term{ fill: #ffffff; stroke: #2b2b2b; stroke-width: 1.4; }
+    .px  { fill: #ffffff; stroke: #00897b; stroke-width: 1.6; }
+    .rail{ fill: none; stroke: #8a8a8a; stroke-width: 1.4; stroke-dasharray: 6 5; }
+    .dot { stroke: none; }
+    .nc  { stroke: #1b1b1b; stroke-width: 2.2; stroke-linecap: round; }
+    .ref { font-size: 15px; font-weight: 700; fill: #111; }
+    .t   { font-size: 13px; fill: #222; }
+    .s   { font-size: 11.5px; fill: #444; }
+    .pin { font-size: 12px; font-weight: 700; fill: #111; font-family: Menlo, Consolas, monospace; }
+    .bb  { font-size: 11px; fill: #555; font-family: Menlo, Consolas, monospace; }
+    .wc  { font-size: 11.5px; font-style: italic; fill: #333; }
+    .h1  { font-size: 24px; font-weight: 700; fill: #111; }
+    .h2  { font-size: 13.5px; fill: #555; }
+    .hd  { font-size: 12.5px; font-weight: 700; fill: #111; letter-spacing: 0.06em; }
+    .warn{ font-size: 12px; fill: #8a1c1c; }
+  </style>
+
+  <rect x="0" y="0" width="1600" height="1110" fill="#ffffff"/>
+
+  <!-- ================= TITLE ================= -->
+  <text x="40" y="44" class="h1">Narly — fortune controller wiring schematic</text>
+  <text x="40" y="66" class="h2">As built 2026-09-23 · PIR sensor and toggle switches (Phase 4) not yet wired · pins match fortune-controller.ino</text>
+
+  <!-- ================= PSU1 : S-100-5 ================= -->
+  <rect x="60" y="92" width="340" height="238" rx="4" class="box"/>
+  <text x="78" y="118" class="ref">PSU1</text>
+  <text x="124" y="118" class="t">S-100-5 switching supply</text>
+  <text x="78" y="138" class="t">5 V DC · 20 A · metal case</text>
+  <text x="78" y="156" class="s">Keep clear terminal cover on</text>
+  <text x="78" y="276" class="s">Screw terminals, left → right under cover</text>
+  <!-- terminals 1..7 at x = 90,135,180,225,270,315,360 -->
+  <g>
+    <rect x="72"  y="286" width="36" height="44" class="term"/>
+    <rect x="117" y="286" width="36" height="44" class="term"/>
+    <rect x="162" y="286" width="36" height="44" class="term"/>
+    <rect x="207" y="286" width="36" height="44" class="term"/>
+    <rect x="252" y="286" width="36" height="44" class="term"/>
+    <rect x="297" y="286" width="36" height="44" class="term"/>
+    <rect x="342" y="286" width="36" height="44" class="term"/>
+    <text x="90"  y="304" class="pin" text-anchor="middle">L</text>
+    <text x="135" y="304" class="pin" text-anchor="middle">N</text>
+    <text x="180" y="304" class="pin" text-anchor="middle">⏚</text>
+    <text x="225" y="304" class="pin" text-anchor="middle">V−</text>
+    <text x="270" y="304" class="pin" text-anchor="middle">V−</text>
+    <text x="315" y="304" class="pin" text-anchor="middle">V+</text>
+    <text x="360" y="304" class="pin" text-anchor="middle">V+</text>
+    <text x="90"  y="323" class="bb" text-anchor="middle">1</text>
+    <text x="135" y="323" class="bb" text-anchor="middle">2</text>
+    <text x="180" y="323" class="bb" text-anchor="middle">3</text>
+    <text x="225" y="323" class="bb" text-anchor="middle">4</text>
+    <text x="270" y="323" class="bb" text-anchor="middle">5</text>
+    <text x="315" y="323" class="bb" text-anchor="middle">6</text>
+    <text x="360" y="323" class="bb" text-anchor="middle">7</text>
+  </g>
+
+  <!-- Mains -->
+  <path class="w ac" d="M90 330 V402"/>
+  <path class="w ac" d="M135 330 V402"/>
+  <path class="w ac" d="M180 330 V402"/>
+  <text x="94"  y="372" class="wc">blk</text>
+  <text x="139" y="372" class="wc">wht</text>
+  <text x="184" y="372" class="wc">grn</text>
+  <rect x="60" y="402" width="150" height="44" rx="4" class="box"/>
+  <text x="135" y="421" class="t" text-anchor="middle">120 VAC mains cord</text>
+  <text x="135" y="438" class="s" text-anchor="middle">L · N · earth</text>
+  <text x="60" y="466" class="warn">⚠ Live whenever plugged in.</text>
+  <text x="60" y="481" class="warn">Unplug before touching.</text>
+
+  <!-- Spare terminals 4 and 7 -->
+  <path class="w gnd" d="M225 330 V350"/>
+  <path class="nc" d="M219 344 L231 356 M231 344 L219 356"/>
+  <text x="225" y="372" class="s" text-anchor="middle">spare</text>
+  <path class="w p5" d="M360 330 V350"/>
+  <path class="nc" d="M354 344 L366 356 M366 344 L354 356"/>
+  <text x="360" y="372" class="s" text-anchor="middle">spare</text>
+  <text x="410" y="298" class="s">T4 / T7 spare: reserved for</text>
+  <text x="410" y="313" class="s">direct strip feed (planned</text>
+  <text x="410" y="328" class="s">change, see README)</text>
+
+  <!-- ================= BREADBOARD TOP POWER RAIL ================= -->
+  <rect x="248" y="455" width="922" height="112" rx="6" class="rail"/>
+  <text x="440" y="586" class="s">Breadboard top power rail (between Arduino and terminal strip) · bottom rail unused</text>
+
+  <!-- +5V_LED net: PSU T6 -> rail + -> C1 -->
+  <path class="w p5" d="M315 330 V480 H760 V503"/>
+  <text x="309" y="420" class="wc" text-anchor="middle" transform="rotate(-90 309 420)">red lead</text>
+  <text x="440" y="473" class="t" fill="#c62828"><tspan font-weight="700" fill="#c62828">+5V_LED</tspan>  ·  rail + (red line)</text>
+
+  <!-- GND common net: PSU T5 -> rail − -> Arduino GND -->
+  <path class="w gnd" d="M270 330 V540 H1140 V660"/>
+  <text x="264" y="420" class="wc" text-anchor="middle" transform="rotate(-90 264 420)">black lead</text>
+  <text x="440" y="533" class="t"><tspan font-weight="700">GND (common)</tspan>  ·  rail − (blue line)</text>
+  <text x="1134" y="612" class="wc" text-anchor="end">black jumper</text>
+
+  <!-- C1 470uF across rails, col 40 -->
+  <path class="w p5" d="M742 503 H778"/>
+  <path class="w gnd" d="M742 518 Q760 509 778 518"/>
+  <path class="w gnd" d="M760 513 V540"/>
+  <text x="784" y="501" class="pin" fill="#c62828">+</text>
+  <text x="792" y="492" class="ref">C1</text>
+  <text x="818" y="492" class="t">470 µF electrolytic</text>
+  <text x="792" y="508" class="s">stripe (−) on GND rail</text>
+
+  <!-- rail column callouts -->
+  <text x="408"  y="557" class="bb">col ≈1–3</text>
+  <text x="760"  y="557" class="bb" text-anchor="middle">col 40</text>
+  <text x="990"  y="557" class="bb" text-anchor="middle">col ≈47</text>
+  <text x="1132" y="557" class="bb" text-anchor="end">right end</text>
+
+  <!-- ================= COIN ACCEPTOR SIDE ================= -->
+  <!-- PS2 12V wall adapter -->
+  <rect x="560" y="100" width="150" height="92" rx="4" class="box"/>
+  <text x="576" y="124" class="ref">PS2</text>
+  <text x="576" y="144" class="t">CyberPower</text>
+  <text x="576" y="161" class="t">wall adapter</text>
+  <text x="576" y="180" class="s">12 V DC</text>
+  <!-- barrel cable -->
+  <path class="w v12" d="M710 146 H806"/>
+  <rect x="806" y="139" width="14" height="14" fill="#e07b00"/>
+  <text x="758" y="138" class="s" text-anchor="middle">barrel plug</text>
+
+  <!-- J1 barrel jack adapter -->
+  <rect x="820" y="100" width="120" height="100" rx="4" class="box"/>
+  <text x="834" y="124" class="ref">J1</text>
+  <text x="834" y="143" class="s">barrel-jack to</text>
+  <text x="834" y="158" class="s">screw terminal</text>
+  <text x="928" y="134" class="pin" text-anchor="end">+</text>
+  <text x="928" y="180" class="pin" text-anchor="end">−</text>
+
+  <!-- +12V to HX-916 red -->
+  <path class="w v12" d="M940 130 H1120"/>
+  <text x="1000" y="123" class="wc">HX-916 red</text>
+  <!-- 12V return to HX-916 black, tee to rail -->
+  <path class="w gnd" d="M940 176 H1120"/>
+  <text x="1000" y="169" class="wc">HX-916 black</text>
+  <path class="w gnd" d="M990 176 V540"/>
+  <text x="984" y="360" class="wc" text-anchor="middle" transform="rotate(-90 984 360)">black jumper → rail −</text>
+
+  <!-- COIN1 HX-916 -->
+  <rect x="1120" y="92" width="280" height="168" rx="4" class="box"/>
+  <text x="1210" y="118" class="ref">COIN1</text>
+  <text x="1210" y="138" class="t">HX-916 coin acceptor</text>
+  <text x="1210" y="156" class="s">12 V supply · pulse output;</text>
+  <text x="1210" y="171" class="s">each pulse pulls SIG low</text>
+  <text x="1130" y="134" class="pin">+12V</text>
+  <text x="1130" y="180" class="pin">GND</text>
+  <text x="1240" y="252" class="pin" text-anchor="middle">SIG</text>
+
+  <!-- Coin signal: SIG -> F47 -> R2 (G47–G49) -> F49 -> D2 -->
+  <path class="w sig" d="M1240 260 V340 l9 5 l-18 10 l18 10 l-18 10 l18 10 l-18 10 l18 10 l-9 5 V660"/>
+  <text x="1250" y="300" class="wc">white → bb F47</text>
+  <text x="1262" y="372" class="ref">R2</text>
+  <text x="1290" y="372" class="t">110 Ω</text>
+  <text x="1262" y="390" class="bb">bb G47 → G49</text>
+  <text x="1250" y="520" class="wc">blue jumper</text>
+  <text x="1250" y="536" class="wc">bb F49 → D2</text>
+
+  <!-- ================= U1 ARDUINO UNO ================= -->
+  <rect x="1060" y="660" width="340" height="240" rx="4" class="box"/>
+  <text x="1140" y="680" class="pin" text-anchor="middle">GND</text>
+  <text x="1240" y="680" class="pin" text-anchor="middle">D2</text>
+  <text x="1340" y="680" class="pin" text-anchor="middle">5V</text>
+  <text x="1070" y="785" class="pin">D6</text>
+  <text x="1390" y="785" class="pin" text-anchor="end">USB</text>
+  <text x="1110" y="728" class="ref">U1</text>
+  <text x="1140" y="728" class="t">Arduino Uno</text>
+  <text x="1110" y="818" class="s">D2 = COIN_PIN: INPUT_PULLUP, FALLING interrupt</text>
+  <text x="1110" y="836" class="s">D6 = LED_PIN: WS2812B data, GRB, NUM_LEDS 180</text>
+  <text x="1110" y="854" class="s">Powered from USB only</text>
+  <!-- 5V: not connected -->
+  <path class="w gnd" d="M1340 660 V636"/>
+  <path class="nc" d="M1334 630 L1346 642 M1346 630 L1334 642"/>
+  <text x="1340" y="620" class="s" text-anchor="middle">NC: leave unconnected</text>
+
+  <!-- USB to laptop -->
+  <path class="w usb" d="M1400 780 H1456"/>
+  <rect x="1456" y="746" width="124" height="68" rx="4" class="box"/>
+  <text x="1518" y="772" class="t" text-anchor="middle">Laptop</text>
+  <text x="1518" y="790" class="s" text-anchor="middle">USB: 5 V + serial</text>
+  <text x="1518" y="805" class="s" text-anchor="middle">115200 baud</text>
+
+  <!-- ================= LED1 WS2812B STRIP ================= -->
+  <rect x="300" y="640" width="320" height="260" rx="4" class="box"/>
+  <text x="340" y="660" class="pin" text-anchor="middle">5V</text>
+  <text x="400" y="660" class="pin" text-anchor="middle">GND</text>
+  <text x="606" y="768" class="pin" text-anchor="end">DIN</text>
+  <text x="316" y="700" class="ref">LED1</text>
+  <text x="364" y="700" class="t">WS2812B addressable strip</text>
+  <text x="316" y="718" class="s">3 m · 60 LED/m · 180 px · JST 3-pin in use</text>
+
+  <!-- pixel chain, data flows right to left from DIN -->
+  <path class="w dat" d="M620 780 H580"/>
+  <rect x="556" y="768" width="24" height="24" class="px"/>
+  <rect x="516" y="768" width="24" height="24" class="px"/>
+  <rect x="476" y="768" width="24" height="24" class="px"/>
+  <rect x="396" y="768" width="30" height="24" class="px"/>
+  <path class="w dat" d="M556 780 H540 M516 780 H500 M476 780 H466 M436 780 H426" stroke-width="1.8"/>
+  <text x="568" y="784" class="bb" text-anchor="middle">1</text>
+  <text x="528" y="784" class="bb" text-anchor="middle">2</text>
+  <text x="488" y="784" class="bb" text-anchor="middle">3</text>
+  <text x="451" y="784" class="bb" text-anchor="middle">…</text>
+  <text x="411" y="784" class="bb" text-anchor="middle">180</text>
+
+  <text x="316" y="842" class="s">Separate power pigtails:</text>
+  <text x="316" y="857" class="s">unused, ends taped</text>
+  <path class="w p5" d="M360 900 V926"/>
+  <path class="nc" d="M354 920 L366 932 M366 920 L354 932"/>
+  <path class="w gnd" d="M440 900 V926"/>
+  <path class="nc" d="M434 920 L446 932 M446 920 L434 932"/>
+  <text x="360" y="950" class="wc" text-anchor="middle">red (taped)</text>
+  <text x="440" y="950" class="wc" text-anchor="middle">white (taped)</text>
+
+  <!-- JST 5V to rail + (hops over GND rail) -->
+  <path class="w p5" d="M340 640 V549 A9 9 0 0 1 340 531 V480"/>
+  <text x="346" y="624" class="wc">red</text>
+  <!-- JST GND to rail − -->
+  <path class="w gnd" d="M400 640 V540"/>
+  <text x="406" y="624" class="wc">white</text>
+
+  <!-- LED data: DIN <- R1 330 ohm (col 20 -> 21) <- D6 -->
+  <path class="w dat" d="M620 780 H740 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l10 -18 l10 18 l10 -18 l5 9 H1060"/>
+  <text x="630" y="770" class="wc">teal (DIN)</text>
+  <text x="768" y="758" class="ref">R1</text>
+  <text x="794" y="758" class="t">330 Ω</text>
+  <text x="790" y="812" class="bb" text-anchor="middle">bb col 20 → col 21</text>
+  <text x="880" y="770" class="wc">teal jumper → D6</text>
+
+  <!-- ================= JUNCTION DOTS ================= -->
+  <g fill="#c62828" class="dot">
+    <circle cx="340" cy="480" r="5"/>
+  </g>
+  <g fill="#1b1b1b" class="dot">
+    <circle cx="400" cy="540" r="5"/>
+    <circle cx="760" cy="540" r="5"/>
+    <circle cx="990" cy="540" r="5"/>
+    <circle cx="990" cy="176" r="5"/>
+  </g>
+
+  <!-- ================= LEGEND / NOTES / TITLE BLOCK ================= -->
+  <line x1="40" y1="972" x2="1560" y2="972" stroke="#cfcfcf" stroke-width="1"/>
+
+  <text x="40" y="998" class="hd">LEGEND</text>
+  <path class="w p5"  d="M40 1016 H80"/><text x="90"  y="1020" class="s">+5V_LED (PSU1)</text>
+  <path class="w gnd" d="M40 1036 H80"/><text x="90"  y="1040" class="s">GND, common</text>
+  <path class="w v12" d="M40 1056 H80"/><text x="90"  y="1060" class="s">+12V (coin only)</text>
+  <path class="w ac"  d="M40 1076 H80"/><text x="90"  y="1080" class="s">mains AC</text>
+  <path class="w dat" d="M210 1016 H250"/><text x="260" y="1020" class="s">LED data</text>
+  <path class="w sig" d="M210 1036 H250"/><text x="260" y="1040" class="s">coin signal</text>
+  <path class="w usb" d="M210 1056 H250"/><text x="260" y="1060" class="s">USB</text>
+  <circle cx="230" cy="1076" r="5" fill="#1b1b1b"/><text x="260" y="1080" class="s">junction</text>
+  <path class="w gnd" d="M350 1016 H362 A8 8 0 0 1 378 1016 H390"/><text x="400" y="1020" class="s">crossing, not joined</text>
+  <path class="nc" d="M364 1030 L376 1042 M376 1030 L364 1042"/><text x="400" y="1040" class="s">not connected</text>
+  <text x="350" y="1060" class="wc">italic</text><text x="400" y="1060" class="s">physical wire colour</text>
+  <text x="350" y="1080" class="bb">bb</text><text x="400" y="1080" class="s">breadboard position</text>
+
+  <text x="570" y="998" class="hd">NOTES</text>
+  <text x="570" y="1020" class="s">1. All three supplies (PSU1, PS2, laptop USB) share one ground on the breadboard top − rail. Without it D2 and D6 have no reference.</text>
+  <text x="570" y="1040" class="s">2. The Uno's 5V pin is deliberately unconnected. The Uno runs from USB; PSU1 powers only the strip.</text>
+  <text x="570" y="1060" class="warn">3. Strip current returns through the breadboard rail and jumpers (≈1–2 A safe). Keep animations dim and don't raise the brightness cap.</text>
+  <text x="570" y="1080" class="s">4. Recommended rework (strip fed from PSU1 T4 / T7, C1 moved to strip end) is described in README, not shown here.</text>
+
+  <rect x="1300" y="986" width="260" height="104" fill="none" stroke="#2b2b2b" stroke-width="1.4"/>
+  <line x1="1300" y1="1016" x2="1560" y2="1016" stroke="#2b2b2b" stroke-width="1"/>
+  <text x="1312" y="1006" class="hd">NARLY · fortune-service</text>
+  <text x="1312" y="1036" class="s">Controller wiring, as built</text>
+  <text x="1312" y="1054" class="s">Rev A · 2026-09-23 · Sheet 1 of 1</text>
+  <text x="1312" y="1072" class="s">Source: arduino/README.md</text>
+</svg>

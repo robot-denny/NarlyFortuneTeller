@@ -1,141 +1,228 @@
 # Feature: Audio Capture
 
-When an attendee drops a coin, Narly plays a cue, listens for their spoken question, and turns
-what it heard into the text the fortune is written from. If it hears nothing usable, it quietly
-asks itself a question instead and carries on — the attendee still receives a fortune, and
-nothing on the machine distinguishes that from a question Narly actually heard.
+When an attendee drops a coin, Narly plays a chime, starts listening the instant it ends, and
+turns what it heard into the question the fortune is written from. If it hears nothing usable,
+it asks itself a question instead and carries on, so the attendee still receives a fortune. The
+ticket looks the same either way, but the log does not: every fortune records what Narly heard,
+or which way hearing failed, and whether the question was substituted.
 
-> **Draft** — Reverse-engineered from code; these scenarios have not been verified against a
-> running implementation or any test. Refine and verify before relying on them.
-
-**Source**: derived from implementation (2026-09-22) — no originating spec; reverse-engineered
-from code.
-**Last verified**: 2026-09-22
+**Source**: `_work/shipped/capture-measure-and-fix/spec.md`. Earlier behavior was reverse-engineered
+from code (2026-09-22) and has since been checked against tests and by hand.
+**Last verified**: 2026-09-28
 
 ---
 
 ## Increments
 
-- [ ] (no shipped increments recorded — reverse-engineered baseline)
+- [x] 2026-09-28 — Measure and fix attendee capture (`_work/shipped/capture-measure-and-fix/spec.md`)
+- [ ] Live baseline: the directional mic on a stand, fixture clips recorded across quiet,
+      conversation, and leaning-in, and a first measured success rate (no spec yet)
+- [ ] Pi port: persistent logs, a service that restarts Narly, stable device names (no spec yet)
+- [ ] Endpointing and recognition: voice detection in place of the loudness threshold, and a
+      better recognizer with a local fallback (no spec yet)
 
 ---
 
 ## Open Issues
 
-Three findings from reading the implementation. Each is a genuine defect or dead code rather
-than a documentation gap, and all three bear on the capture-quality problem reported after the
-first two events.
+Open issues are genuine defects or gaps, not documentation holes. Resolved ones stay listed with
+the commit that fixed them, so the reasoning isn't lost.
 
-1. **Ambient-noise calibration is performed and then discarded.**
-   `recognizer.adjust_for_ambient_noise(source, duration=0.8)` measures the room and sets
-   `energy_threshold` from it. The next two lines overwrite `energy_threshold` with the fixed
-   value `1100` and set `dynamic_energy_threshold = False`, so the measurement is thrown away
-   unused. The calibration costs 0.8 seconds of every run and changes nothing. Its inline
-   comment also claims it runs "while sound plays", but the cue above it is played with
-   `wait=True`, so the sound has already finished — calibration happens in silence, measuring an
-   empty room rather than the festival.
+1. **Resolved in `32daedb`: ambient-noise calibration was performed and then discarded.** A fixed
+   threshold of `1100` with adaptation off overwrote the room measurement on every run. Narly now
+   keeps the measurement, uses the speech library's default threshold, and adapts to the room as
+   it goes.
 
-   **This matches what the owner observed in the field.** Long sessions spent tuning the fixed
-   `1100` produced no reliable improvement. A plausible reading: a single fixed threshold is
-   being asked to serve a room whose noise floor moves through the day, while the one mechanism
-   that would track that movement is computed and discarded on every run. Tuning hunts a stable
-   value for a moving target. Treat this as a hypothesis to test once logging exists, not as an
-   established cause.
-   (`serial_trigger.py:90-95`)
+2. **`TIMEOUT_RECORDING` still does not control the listening window it documents.** Listening
+   uses fixed values (10 seconds to start speaking, 8 seconds of speech). The constant only
+   feeds the 25-second outer guard. *This increment:* unchanged, on purpose. It belongs with the
+   endpointing-and-recognition increment, which replaces how listening decides to stop.
+   (`serial_trigger.py:43`, `serial_trigger.py:147`, `serial_trigger.py:271`)
 
-2. **`TIMEOUT_RECORDING` does not control the listening window it documents.**
-   The constant is commented "Max time to wait for speech input" and set to 15 seconds, but the
-   actual call uses hardcoded values — `listen(source, timeout=10, phrase_time_limit=8)`. The
-   constant only feeds the outer guard (`TIMEOUT_RECORDING + 10` = 25s). Raising it to give
-   attendees longer to speak would have no effect on how long Narly actually listens. The owner
-   reports tuning this constant and seeing no change in behaviour, which is exactly what the code
-   predicts.
-   (`serial_trigger.py:37`, `serial_trigger.py:99`, `serial_trigger.py:126`)
+3. **A failed capture still looks like a successful one on the ticket.** Every failure prints a
+   plausible fortune for the persona's default question, and the attendee is told nothing.
+   *This increment:* failures are now told apart in the log. Each has its own outcome name, and
+   a substituted question is marked as substituted (`7c94a8a`). The ticket is unchanged, by
+   decision.
 
-3. **A failed capture is indistinguishable from a successful one after the fact.**
-   All five failure paths return `None`, and the caller silently substitutes the persona's
-   `default_question`. The run then proceeds normally and prints a plausible fortune. Nothing is
-   recorded, so an operator cannot tell afterwards whether a fortune answered the attendee's
-   question or Narly's own. This is the mechanism behind "it was unclear whether the audio was
-   captured accurately" — the design makes it structurally unclear.
-   (`serial_trigger.py:105-116`, `serial_trigger.py:238-240`)
+4. **Resolved in `32daedb`: a ~2.8 second dead window after the coin lost the start of
+   questions.** Calibration used to run after the chime, so attendees who spoke as the chime
+   ended lost their first words. Calibration now runs before the chime, and listening starts the
+   instant the chime ends.
 
-4. **There is a ~2.8 second dead window after the coin in which speech is lost.**
-   The readiness chime (`sfx_magic.mp3`, 1.96s) is played with `wait=True`, so it blocks. Only
-   after it finishes does the 0.8s ambient calibration run, and only then is `listen()` called.
-   Anything the attendee says in those ~2.8 seconds is never recorded. This interacts badly with
-   observed attendee behaviour: people learned to treat the chime as their cue and begin speaking
-   as it ends, which places the start of their question inside the calibration gap. The cue
-   trains exactly the wrong timing.
-   (`serial_trigger.py:86`, `serial_trigger.py:90`, `serial_trigger.py:99`)
+5. **The app occasionally hangs, and the cause is unknown.** *This increment:* the log now
+   exists to diagnose it. Each fortune's capture line records how long hearing took, and the
+   next hang will show where the run stopped. One candidate is gone: `afplay` was replaced by
+   in-process playback whose blocking wait gives up after 5 seconds (`2114bf5`). One candidate
+   is now confirmed from the code. When the whole listening stage passes 25 seconds, Narly
+   records `overrun` but still waits for the stuck attempt to finish before carrying on
+   (`capture_client.py:128-134`). The speech recognizer call has no timeout of its own, so a
+   recognizer that never answers would hold the booth. Whether that is what happened at the
+   events is still unconfirmed.
 
-5. **The app occasionally hangs, and the cause is unknown.**
-   Reported from the first two events, with no pattern identified and nothing recorded at the
-   time to narrow it down. A failed capture is *not* the cause — that path is confirmed to
-   continue normally. Candidates worth ruling in or out once logging exists: the abandoned
-   transcription worker in the Edge Cases section below, a blocking `afplay`, or a serial read
-   with no data. This issue is the clearest argument for `3a` shipping before anything else in
-   Phase 3.
+6. **An offline clip run proves the clip can be read, not what is heard in it.** With
+   `--offline`, the stand-in recognizer ignores the recording and reports the persona's default
+   question. So the log never shows the clip's own question, and "the same clip gives the same
+   heard text" holds only trivially. Proving what Narly hears in a clip needs a recognizer that
+   runs offline for free. That belongs with the endpointing-and-recognition increment, alongside
+   the fixture clips the live-baseline increment records.
+
+7. **The readiness chime may be too quiet in a busy room.** At the September events it was
+   marginal over crowd noise, and people leaned in to hear it. In-process playback tops out at
+   full volume, so the old 3× boost is gone (`2114bf5`) and the chime may now be quieter. A guest
+   who misses the chime has only the lights glowing to tell them to speak. Check it at the live
+   baseline: the chime at the real speaker's volume, over conversation, from where a guest
+   stands.
 
 ---
 
 ## Behaviors
 
-### Rule: Narly signals that it is ready before it starts listening
+### Rule: Narly signals that it is ready, then listens the instant the signal ends
 
 ```scenario
-Scenario: The cue plays before listening begins
+Scenario: The chime plays, then listening begins
   Given an attendee has dropped a coin
   When Narly prepares to hear their question
-  Then a chime plays and finishes
-  And only then does Narly begin listening
-  And the lights glow while it listens
+  Then the lights glow
+  And Narly measures the room's noise
+  And a chime plays and finishes
+  And Narly begins listening immediately after the chime ends
 ```
 
-*Field-verified 2026-09-22:* the chime is audible in a quiet room, and attendees learned to
-treat it as their cue to speak. In a busy room it is marginal — people crane toward the cabinet
-to catch it. Its audibility is therefore not the limiting factor; its **timing** is, per Open
-Issue 4.
+```scenario
+Scenario: An attendee who speaks as the chime ends is heard from the first word
+  Given an attendee has learned to speak the moment the chime finishes
+  When they begin "Will I find treasure today?" as the chime ends
+  Then the whole question is recorded, including "Will"
+```
+
+*Field-verified 2026-09-28 (Fifine AM8 USB mic, arm's length):* a question spoken right after
+the chime was transcribed starting with its first word.
+
+*Field-verified 2026-09-22:* the chime is audible in a quiet room, and attendees learned to treat
+it as their cue to speak. In a busy room it is marginal, and people crane toward the cabinet to
+catch it. Its timing is now fixed; its loudness is not (Open Issue 7).
+
+```scenario
+Scenario: The thinking cue follows once the question is captured
+  Given Narly has finished listening
+  When it starts writing the fortune
+  Then the thinking cue plays
+  And the fortune is written while the cue is still playing
+```
+
+### Rule: Narly wakes to an ordinary voice and adjusts to the room
+
+```scenario
+Scenario: A normal speaking voice is enough
+  Given an attendee standing at arm's length from the microphone
+  When they ask their question at conversational volume, without leaning in
+  Then Narly records the question
+  And the log shows it as heard
+```
+
+```scenario
+Scenario: Narly adjusts to the room rather than a fixed setting
+  Given the room was quiet in the morning and has conversation in it by afternoon
+  When an attendee asks a question in the afternoon at the same volume as the morning
+  Then Narly still begins recording
+```
 
 ### Rule: A question Narly hears is the question the fortune answers
 
 ```scenario
-Scenario: A clearly spoken question is used
+Scenario: A clearly spoken question is used and recorded
   Given an attendee asks "Will I find treasure today?"
   And Narly hears it clearly
   When the fortune is generated
   Then it is generated from "Will I find treasure today?"
+  And the log shows that question as heard, word for word
 ```
 
-### Rule: When Narly hears nothing usable, it asks itself a question instead
+### Rule: When Narly hears nothing usable, it asks itself a question instead, and says so
 
 ```scenario
 Scenario: Silence is replaced with Narly's own question
   Given an attendee drops a coin and says nothing
-  When Narly gives up listening
-  Then the fortune-generation sound plays as normal
+  When Narly gives up listening after 10 seconds
+  Then the thinking cue plays as normal
   And it proceeds using the question "What is my fortune for today?"
   And the attendee still receives a printed fortune
   And nothing on the ticket indicates the question was substituted
+  But the log records that nothing was heard and that the question was substituted
 ```
 
-*Field-verified 2026-09-22:* this path does not hang. The generation cue sounds and a generic
-fortune prints, which is what made the failure invisible rather than merely unreported.
+*Field-verified 2026-09-22:* this path does not hang. The thinking cue sounds and a generic
+fortune prints.
 
 ```scenario
 Scenario: An unintelligible answer is replaced the same way
   Given an attendee speaks but Narly cannot make out the words
   When Narly gives up on the recording
   Then it proceeds using the question "What is my fortune for today?"
-  And the attendee receives a fortune indistinguishable from a heard one
+  And the attendee receives a fortune that looks the same as a heard one
+  But the log records the answer as "not understood", not as silence
 ```
+
+### Rule: The operator can tell every way of failing to hear apart
+
+```scenario
+Scenario: Silence and an unintelligible answer are different records
+  Given one attendee dropped a coin and never spoke
+  And another attendee's words could not be made out
+  When the operator reads the log
+  Then the first run is recorded as "nothing heard"
+  And the second is recorded as "not understood"
+```
+
+```scenario
+Scenario: Two different failures look the same to attendees but not to the operator
+  Given one attendee is misheard because the room is loud
+  And another attendee is not heard because the microphone is unplugged
+  When each of them collects their fortune
+  Then neither is told anything went wrong
+  But the log records one as "not understood" and the other as a microphone fault
+```
+
+```scenario
+Scenario: Counting an event's failures by kind
+  Given Narly served 60 attendees across a day, with the log saved to a file
+  And 18 of them were not heard correctly
+  When the operator counts the log's outcomes
+  Then they can count 18 failures
+  And they can see how many were silence, not understood, the recognizer unreachable, a
+    microphone fault, or the whole stage overrunning
+```
+
+```scenario
+Scenario: Failures stand out from ordinary progress
+  Given a day of fortunes, some heard and some not
+  When the operator reads the log
+  Then every line carries its time and a severity
+  And a failed capture is a warning while a heard one is ordinary information
+```
+
+### Rule: The operator's live view shows each fortune as a timestamped run
+
+```scenario
+Scenario: Watching fortunes happen on the laptop
+  Given the operator is watching Narly's terminal during an event
+  When an attendee drops a coin
+  Then a coin line starts that fortune's run
+  And every line after it shows its time and severity
+  And the capture line shows what was heard, or why nothing was
+```
+
+Every terminal line now carries a timestamp and a level, and the blank lines that used to
+separate cycles are gone. The coin line is what marks where each fortune starts.
 
 ### Rule: Listening ends on its own without the attendee doing anything
 
 ```scenario
 Scenario: An attendee who never speaks is not waited on forever
   Given an attendee drops a coin and stays silent
-  When 10 seconds pass with no speech
+  When 10 seconds pass after the chime with no speech
   Then Narly stops listening
 ```
 
@@ -146,6 +233,9 @@ Scenario: A long-winded question is cut off
   Then Narly stops listening and works with what it has
 ```
 
+*Observed 2026-09-28:* on a colleague's laptop, two real-mic questions both recorded for the
+full 8 seconds rather than stopping at the end of the question.
+
 ```scenario
 Scenario: A pause mid-question does not end the recording
   Given an attendee says "Will I find treasure" and pauses to think
@@ -153,34 +243,57 @@ Scenario: A pause mid-question does not end the recording
   Then Narly keeps listening for the rest of the question
 ```
 
-### Rule: A question can be lost to timing as well as to noise
+### Rule: A tester needs no hardware and spends nothing
 
 ```scenario
-Scenario: An attendee speaks the moment the chime ends
-  Given an attendee has learned to speak as soon as the chime finishes
-  When they begin their question immediately
-  Then the opening of their question falls in the gap before Narly starts listening
-  And that part of what they said is never recorded
+Scenario: A tester runs a fortune from typed text
+  Given a tester on their own laptop with no microphone, coin slot, or printer attached
+  When they run an offline fortune with the typed question "Should I take the job?"
+  Then the run completes with a test ticket on screen
+  And the log shows "Should I take the job?" as the question heard
+  And no call was made to the paid transcription or fortune services
 ```
 
 ```scenario
-Scenario: A question is spoken clearly but the room is loud
-  Given an attendee waits for the right moment and speaks clearly
-  And the room behind them is noisy
-  When Narly transcribes what it recorded
-  Then the question may still come back unintelligible
-  And no amount of waiting or repeating by the attendee changes that
+Scenario: A tester runs a fortune from a recorded clip
+  Given a tester with no hardware attached
+  And a recorded clip of someone asking "Should I take the job?"
+  When they run an offline fortune using that clip
+  Then the run completes with a test ticket on screen
+  And the log shows the persona's usual question as the question heard
+  And no call was made to the paid transcription or fortune services
 ```
 
-### Rule: Every way of failing to hear looks the same to the attendee
+*Field-verified 2026-09-28:* a colleague who had never run Narly followed `docs/testing.md` on
+her own Mac and ran both, with no hardware and no API key. The clip's own words don't reach the
+log offline; see Open Issue 6.
 
 ```scenario
-Scenario: Two different failures produce the same experience
-  Given one attendee is misheard because the room is loud
-  And another attendee is not heard because the microphone is unplugged
-  When each of them collects their fortune
-  Then neither is told anything went wrong
-  And the two failures are indistinguishable from each other
+Scenario: A tester with no hardware doesn't need to name a question
+  Given a tester with no hardware attached
+  When they run an offline fortune without typing a question or giving a clip
+  Then Narly uses the persona's usual question as typed text
+  And the run completes without opening a microphone
+```
+
+### Rule: The same input gives the same record every time
+
+```scenario
+Scenario: Replaying a typed question is repeatable
+  Given a tester runs the offline typed question "Will I find treasure today?"
+  When they drop two coins in a row
+  Then both runs record the same outcome and the same heard text
+  And both record the same question
+```
+
+### Rule: The attendee's experience of a heard fortune is unchanged
+
+```scenario
+Scenario: A successful fortune looks and sounds the same
+  Given an attendee drops a coin, waits for the chime, and asks "What is my fortune?"
+  Then they hear the same chime and thinking cue as before
+  And they see the same light states as before
+  And they receive a printed ticket no wider than 32 characters, in every persona
 ```
 
 ---
@@ -194,6 +307,7 @@ Scenario: The transcription service cannot be reached
   Given the booth has lost its internet connection
   When an attendee asks a question
   Then Narly does not crash
+  And the log records the recognizer as unreachable
   And the fortune run continues with the substituted question
 ```
 
@@ -202,22 +316,94 @@ Scenario: The microphone is unavailable
   Given the microphone has been unplugged from the laptop
   When an attendee drops a coin and speaks
   Then Narly does not crash
+  And the log records a microphone fault, with the reason
   And the fortune run continues with the substituted question
 ```
 
 ```scenario
 Scenario: The whole listening stage overruns
-  Given transcription hangs rather than returning
-  When 25 seconds have passed since listening began
-  Then Narly abandons the attempt
+  Given transcription is slow to return
+  When more than 25 seconds have passed since listening began
+  Then the log records the attempt as overrun, with how long it really took
+  And the fortune run continues with the substituted question once the attempt ends
+```
+
+> The attempt is not cut off at 25 seconds. Narly waits for it to finish, then records it as
+> overrun (Open Issue 5).
+
+```scenario
+Scenario: A recognizer that returns no words is not counted as heard
+  Given the recognizer answers with an empty transcript
+  When Narly records the capture
+  Then it is recorded as "not understood"
+  And the question is substituted
+```
+
+### Rule: In a very quiet room, silence is recorded as "not understood"
+
+```scenario
+Scenario: Silence at a quiet desk
+  Given Narly is running in a silent room, such as an office desk
+  When an attendee drops a coin and says nothing
+  Then within a few seconds Narly treats the microphone's own faint hiss as the start of speech
+  And the capture is recorded as "not understood", not "nothing heard"
   And the fortune run continues with the substituted question
 ```
 
-> needs human input: whether abandoning at 25 seconds leaves the microphone usable for the next
-> attendee, or whether the abandoned attempt keeps holding the device. The code starts the work
-> on a background worker and stops waiting for it, but does not stop the work itself. The owner
-> reports occasional unexplained hangs (Open Issue 5); whether they are this is unconfirmed, and
-> guessing either way would be inventing a cause. Logging should settle it.
+*Measured 2026-09-28:* with adaptation on, the threshold falls to about 1.5 times the mic's hiss
+within about 2.4 seconds, and the hiss then trips it. A festival hall is never this quiet. The
+endpointing-and-recognition increment replaces the threshold.
+
+### Rule: Missing or broken sound never stops a fortune
+
+```scenario
+Scenario: A cue file is missing
+  Given the chime's sound file has been deleted
+  When an attendee drops a coin
+  Then no chime plays
+  And the log records the missing file
+  And the fortune run continues
+```
+
+```scenario
+Scenario: The speaker never reports the chime finished
+  Given the sound device starts the chime but never reports it done
+  When 5 seconds have passed
+  Then Narly stops the chime and records it as stuck
+  And listening begins
+```
+
+```scenario
+Scenario: The next coin cuts off the previous thinking cue
+  Given the thinking cue from one fortune is still playing
+  When the next attendee drops a coin
+  Then the new chime replaces the thinking cue
+```
+
+### Rule: The record stays readable whatever is said
+
+```scenario
+Scenario: An attendee's words cannot break the record
+  Given an attendee says something containing quotation marks and a line break
+  When the operator reads the log
+  Then that fortune's capture is still one line
+  And it can still be counted with the others
+```
+
+```scenario
+Scenario: The log file does not grow without limit
+  Given Narly is saving its log to a file
+  When the file reaches 5 megabytes
+  Then it starts a new file, keeping the three most recent older ones
+```
+
+```scenario
+Scenario: A log file that can't be written doesn't stop Narly
+  Given the operator asks for a log file in a folder that doesn't exist
+  When Narly starts
+  Then it reports the problem once
+  And it keeps logging to the terminal
+```
 
 ---
 
@@ -225,19 +411,41 @@ Scenario: The whole listening stage overruns
 
 | Scenario | Test File | Status |
 |----------|-----------|--------|
-| The cue plays before listening begins | — | Not covered |
-| A clearly spoken question is used | — | Not covered (code-derived) |
-| Silence is replaced with Narly's own question | — | Not covered |
-| An unintelligible answer is replaced the same way | — | Not covered (code-derived) |
-| An attendee who never speaks is not waited on forever | — | Not covered (code-derived) |
+| The chime plays, then listening begins | `tests/test_sequencing.py:L61` (measure → chime → listen order; the lights are checked by hand) | Covered |
+| An attendee who speaks as the chime ends is heard from the first word | — (manual: first word heard with the AM8, 2026-09-28; the order behind it is `tests/test_sequencing.py:L61`) | Not covered |
+| The thinking cue follows once the question is captured | `tests/test_audio_out.py:L32` | Covered |
+| A normal speaking voice is enough | — (manual: arm's-length check with the AM8, Step 8) | Not covered |
+| Narly adjusts to the room rather than a fixed setting | — (`tests/test_sequencing.py:L69` asserts adaptation is left on; a changing room is unmeasured until the live baseline) | Not covered |
+| A clearly spoken question is used and recorded | `tests/test_on_coin_event.py:L65` | Covered |
+| Silence is replaced with Narly's own question | `tests/test_on_coin_event.py:L37` | Covered |
+| An unintelligible answer is replaced the same way | `tests/test_on_coin_event.py:L87` | Covered |
+| Silence and an unintelligible answer are different records | `tests/test_on_coin_event.py:L37`, `tests/test_on_coin_event.py:L87` | Covered |
+| Two different failures look the same to attendees but not to the operator | `tests/test_on_coin_event.py:L87`, `tests/test_on_coin_event.py:L105` | Covered |
+| Counting an event's failures by kind | — (manual: `grep -c` recipes in `docs/testing.md`, checked against a real log file 2026-09-28) | Not covered |
+| Failures stand out from ordinary progress | `tests/test_logger.py:L27`, `tests/test_on_coin_event.py:L87` | Covered |
+| Watching fortunes happen on the laptop | `tests/test_on_coin_event.py:L222`, `tests/test_logger.py:L27` | Covered |
+| An attendee who never speaks is not waited on forever | `tests/test_capture_client.py:L43` (outcome only; the 10 seconds is the library's) | Not covered (code-derived) |
 | A long-winded question is cut off | — | Not covered (code-derived) |
-| A pause mid-question does not end the recording | — | Not covered (code-derived) |
-| An attendee speaks the moment the chime ends | — | Not covered (code-derived) |
-| A question is spoken clearly but the room is loud | — | Not covered (code-derived) |
-| Two different failures produce the same experience | — | Not covered (code-derived) |
-| The transcription service cannot be reached | — | Not covered (code-derived) |
-| The microphone is unavailable | — | Not covered (code-derived) |
-| The whole listening stage overruns | — | Not covered (code-derived) |
+| A pause mid-question does not end the recording | — (`tests/test_sequencing.py:L77` asserts the 1.5-second setting; the pause behavior is the library's) | Not covered (code-derived) |
+| A tester runs a fortune from typed text | `tests/test_replay.py:L63` | Covered |
+| A tester runs a fortune from a recorded clip | `tests/test_replay.py:L40` (file becomes audio; the full run checked by a colleague 2026-09-28) | Not covered |
+| A tester with no hardware doesn't need to name a question | `tests/test_replay.py:L100` | Covered |
+| Replaying a typed question is repeatable | `tests/test_replay.py:L63` | Covered |
+| A successful fortune looks and sounds the same | — (`tests/test_smoke.py:L23` asserts the 32-character width for every persona; sound and lights are checked by hand) | Not covered |
+| The transcription service cannot be reached | `tests/test_on_coin_event.py:L164` | Covered |
+| The microphone is unavailable | `tests/test_on_coin_event.py:L248` | Covered |
+| The whole listening stage overruns | `tests/test_on_coin_event.py:L187` | Covered |
+| A recognizer that returns no words is not counted as heard | `tests/test_capture_client.py:L151` | Covered |
+| Silence at a quiet desk | — (manual: measured with the AM8, 2026-09-28) | Not covered |
+| A cue file is missing | `tests/test_audio_out.py:L50` | Covered |
+| The speaker never reports the chime finished | `tests/test_audio_out.py:L73` | Covered |
+| The next coin cuts off the previous thinking cue | — | Not covered (code-derived) |
+| An attendee's words cannot break the record | `tests/test_on_coin_event.py:L129` | Covered |
+| The log file does not grow without limit | `tests/test_logger.py:L49` | Covered |
+| A log file that can't be written doesn't stop Narly | `tests/test_logger.py:L111` | Covered |
+
+Cues on a Linux machine (the spec's acceptance criterion 8) aren't a scenario here yet. They
+are checked on the Pi in the Pi-port increment.
 
 <!-- Status vocabulary. Each status is a claim about what is proved, not a stage in a process:
      read a row as its answer to "what does this entitle me to believe?"
@@ -276,3 +484,25 @@ Scenario: The whole listening stage overruns
   unexplained hangs (Open Issue 5), and a rule separating timing losses from noise losses.
   Recorded that tuning the energy threshold and the recording timeout produced no observed
   effect, which matches Open Issues 1 and 2.
+- 2026-09-28: Updated for the measure-and-fix-capture increment; draft banner removed.
+  - **Listening now starts as the chime ends.** The spec's scenario said "as the chime starts".
+    It now says "as the chime ends": listening during the chime would record the chime itself
+    as speech, and attendees in the field speak as it ends. The old "opening of the question is
+    lost" scenario is gone, because that no longer happens.
+  - **Default threshold, adapting.** Narly now uses the speech library's default wake threshold
+    and adjusts it to the room.
+  - **Failures are on the record.** What was heard, or which of the five failures occurred, is
+    in the log, along with whether the question was substituted.
+  - **Hardware-free testing.** A tester with no hardware can run a fortune from typed text or a
+    clip.
+  - **Operator's live view.** The spec said it "behaves as it does today", which is no longer
+    true: every terminal line now carries a time and level, the blank lines between cycles are
+    gone, and the coin line marks each fortune's start.
+  - **Open Issues.** 1 and 4 resolved in `32daedb`. 2, 3, and 5 remain open, with this
+    increment's effect noted. 5 gains a confirmed candidate from the code: an overrun waits for
+    the stuck attempt. 6 is new: offline clips don't prove what's heard. 7 is new: the chime's
+    loudness in a busy room, carried from the 2026-09-22 field check.
+  - **Evidence.** The coverage table now points at real tests. Recognizer-unreachable, overrun,
+    and coin-line-order scenarios gained full-run tests at review, so all five failure kinds are
+    proved end to end. The hardware-only scenarios name
+    their manual check. Quiet-desk silence logs "not understood", as measured on 2026-09-28.
