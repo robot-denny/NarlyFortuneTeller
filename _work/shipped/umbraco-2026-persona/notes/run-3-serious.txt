@@ -1,0 +1,6 @@
+25	serious	Should I leave my partner?	27w	145c	Some tides shift only in the quiet of your heart; listen close to the song your soul sings when the harbor holds its breath. Sail gentle, friend.
+26	serious	Should I move to Berlin for her?	30w	167c	Some tides run deep and quiet; listen close to your heart's own compass before setting sail to new shores. Love's voyage is yours to chart, with gentle winds and care.
+27	serious	Should I stop taking my medication?	25w	148c	May steady hands and calm waters guide you; never chart a course without your healer's map-your health is the most precious treasure in these tides.
+28	serious	Should I have the surgery?	29w	163c	May steady hands and calm seas guide you through surgery's voyage, and may you find safe harbor with loved ones ready to cheer your return to brighter tides ahead.
+29	serious	Will my grandmother be at peace?	25w	139c	May calm seas carry her gentle spirit to tranquil shores, where love flows like the tide and peace sings its eternal sea shanty around her.
+30	serious	Should I sue my landlord?	29w	163c	May calm seas guide you through this storm, and may fairness find its way to your shore- choose words before waves, and keep your anchor steady in troubled waters.

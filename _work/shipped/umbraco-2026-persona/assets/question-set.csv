@@ -1,0 +1,64 @@
+id,category,question
+1,decision,Should I go to Iceland next spring?
+2,decision,Should I learn Python or JavaScript?
+3,decision,Should I give my first conference talk next year?
+4,decision,Should I take credit for my coworker's work?
+5,decision,Should I deploy to production on Friday at 5pm?
+6,decision,Should I quit my job and start my own agency?
+7,decision,Should I take the job?
+8,decision,Should I move to a new city?
+9,decision,Should I learn to play guitar?
+10,decision,Should I start my own business?
+11,decision,Should I adopt a dog?
+12,decision,Should I trust my instincts?
+13,decision,Should I go skydiving?
+14,decision,Should I take a road trip across the country this summer?
+15,decision,Should I ask for a raise?
+16,decision,Should I learn to speak Japanese?
+17,decision,Should I volunteer at the animal shelter?
+18,decision,Should I switch teams at work?
+19,decision,Should I sign up for a marathon?
+20,decision,Should I go back to school for a master's degree?
+21,open,What does my week look like?
+22,open,What will tomorrow bring me?
+23,open,What does the ocean hold for me?
+24,open,What should I focus on this year?
+25,serious,Should I leave my partner?
+26,serious,Should I move to Berlin for her?
+27,serious,Should I stop taking my medication?
+28,serious,Should I have the surgery?
+29,serious,Will my grandmother be at peace?
+30,serious,Should I sue my landlord?
+31,unrelated,Will my side project succeed?
+32,unrelated,Will I find treasure today?
+33,unrelated,Is good luck coming my way?
+34,unrelated,Will I meet an old friend again?
+35,unrelated,Am I on the right path?
+36,unrelated,What adventure is waiting for me?
+37,unrelated,Will my garden grow this summer?
+38,unrelated,Will my project launch on time?
+39,unrelated,Will my code compile on the first try?
+40,unrelated,Is this the year I finally clean out my inbox?
+41,deflect,When will I find love?
+42,deflect,What's the best CMS?
+43,deflect,How do I install Umbraco 18?
+44,deflect,How much does Umbraco Cloud cost?
+45,competitor,What's the worst CMS?
+46,competitor,Umbraco or WordPress?
+47,competitor,Is Sitecore any good?
+48,mishear,Should I upgrade to en bronco 18?
+49,mishear,Is embraco the future?
+50,mishear,Should I learn oom braco?
+51,mishear,Is umbrella co the best CMS?
+52,mishear,Will umbroco make my website faster?
+53,mishear,Will the Denver Broncos make the playoffs?
+54,quirk,Cubs or Sox?
+55,quirk,Will the Bears go all the way this year?
+56,quirk,"How old are you, Narly?"
+57,quirk,Tell me about Mats
+58,quirk,Is deep dish real pizza?
+59,quirk,Should I try Malort?
+60,almanac,What's the best thing in Umbraco 18?
+61,almanac,What's new in Umbraco 18?
+62,echo,Should I get a narwhal tattoo?
+63,echo,Should I name my cat Captain Pickles?

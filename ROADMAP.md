@@ -41,6 +41,14 @@ confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/li
   laptop clips there. The laptop score is the comparison. If the Pi scores worse and can't be
   fixed easily before an event, that event runs on the laptop.
 
+**Bound the fortune call's wait.** Found in the umbraco-2026 code review (2026-09-29).
+`generate_fortune_with_timeout` (`serial_trigger.py`) logs its 30 s `TIMEOUT_AI`, but leaving its
+`with ThreadPoolExecutor(...)` block waits for the call to finish anyway. The OpenAI client in
+`ai_client.py` sets no timeout of its own (the library's default is 10 minutes, with retries), so a
+stalled call holds the guest until OpenAI gives up, not until 30 s. Fix: pass a request timeout
+to the OpenAI client and stop the executor waiting on a timed-out call. Pre-existing, not caused by
+the move to `gpt-4.1-mini`; the owner accepts the extra seconds that model adds.
+
 **Increment 4 — Endpointing and recognition.** Measured against the Increment 2 fixtures.
 
 - Silero VAD replaces energy-based endpointing, which cannot find a pause in noise. V3 `2a`.
@@ -65,6 +73,13 @@ confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/li
 
 ## Recently shipped
 
+- **Umbraco 2026 persona** (2026-09-29, `_work/shipped/umbraco-2026-persona/`). `umbraco-2026`
+  for the Umbraco 2026 US Festival in Chicago, on `gpt-4.1-mini`. Clear verdicts on decision
+  questions, deflection by intent, fond competitor teasing, quirks only when invited, and a
+  reviewed almanac. Tuned over four rounds against a 63-question set: 0/20 hedges, 0/10 stray
+  quirks, no measurable latency from the longer prompt. A booth hardware run heard "embraco" and
+  printed "Umbraco". Accepted: a few tickets run 31–32 words; misheard "umbrella co" may get a
+  "no" before steering to Umbraco. Behavior is in `_features/personas.md`.
 - **Increment 1 — Measure and fix attendee capture** (2026-09-28,
   `_work/shipped/capture-measure-and-fix/`). Every fortune logs what was heard, or which of five
   failures struck, and whether the question was substituted (V2 `3a`). A full fortune runs with

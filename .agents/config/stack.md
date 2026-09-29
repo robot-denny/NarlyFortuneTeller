@@ -27,11 +27,15 @@ from `/Users/dkardys/Sites/fortune-service`. The README's `python NarlyFortuneTe
 form is stale — there is no `NarlyFortuneTeller/` subdirectory; the modules sit at the repo root.
 
 Smoke check that exercises config loading without hitting the OpenAI API, the mic, or hardware
-(verified — prints three personas, exits 0):
+(verified — prints four personas, exits 0):
 
 ```bash
 .venv/bin/python serial_trigger.py --list-personas
-# Available personas: default, music, umbraco-2025
+# Available personas:
+#   default
+#   music
+#   umbraco-2025
+#   umbraco-2026
 ```
 
 Fuller manual verification, which **does** call the OpenAI API (costs money) but neither prints
