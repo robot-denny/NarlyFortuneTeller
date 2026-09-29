@@ -24,24 +24,27 @@ class _NoLeds:
 
 
 @pytest.fixture
-def quiet_and_configured(monkeypatch):
+def quiet_and_configured():
     """Load the default persona and silence the LEDs for a test.
 
     The speaker needs no stub here: `on_coin_event` plays sound only through the
     `audio_out` provider, and every test wires a `FakeAudioOut` there, which
-    records the request and makes no sound. `LedClient` is replaced so the test
-    never touches the Arduino — see `_NoLeds`.
+    records the request and makes no sound. The run's shared LED client,
+    `serial_trigger._led`, is set to `_NoLeds` so the test never touches the
+    Arduino. A test that opens a (fake) port through `listen_serial_mode`
+    replaces it, and this fixture puts it back.
 
-    The module globals the tests set (`_config` and the four providers) are put
-    back afterwards, so no test file inherits what the last test wired.
+    The module globals the tests set (`_config`, `_led`, and the four
+    providers) are put back afterwards, so no test file inherits what the last
+    test wired.
     """
-    monkeypatch.setattr(serial_trigger, "LedClient", lambda *args, **kwargs: _NoLeds())
-    saved = (serial_trigger._config, serial_trigger._get_audio, serial_trigger._transcribe,
-             serial_trigger._fortune, serial_trigger._audio_out)
+    saved = (serial_trigger._config, serial_trigger._led, serial_trigger._get_audio,
+             serial_trigger._transcribe, serial_trigger._fortune, serial_trigger._audio_out)
     serial_trigger._config = load_config("default")
+    serial_trigger._led = _NoLeds()
     yield
-    (serial_trigger._config, serial_trigger._get_audio, serial_trigger._transcribe,
-     serial_trigger._fortune, serial_trigger._audio_out) = saved
+    (serial_trigger._config, serial_trigger._led, serial_trigger._get_audio,
+     serial_trigger._transcribe, serial_trigger._fortune, serial_trigger._audio_out) = saved
 
 
 @pytest.fixture

@@ -259,7 +259,12 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > (a) An Arduino that disappears ends the run. In `listen_serial_mode`, catch
 > `serial.SerialException` and `OSError` from the read loop. Log one ERROR, `Arduino
 > disconnected: <detail>`, which also says a restart will look for it again, then `sys.exit(1)`.
-> Ctrl+C still exits quietly. Test in `tests/test_serial_listen.py` with a fake serial whose
+> Ctrl+C still exits quietly. Do the same when **opening** the port fails (for example, because
+> `exclusive=True` finds another copy of Narly holding it). Log one ERROR, `Could not open the
+> Arduino port <port>: <detail>`, with the hint "is Narly already running? On the Pi: sudo
+> systemctl stop narly", then `sys.exit(1)`. Test both with a fake serial. For the open: patch
+> `serial_trigger.serial.Serial` to raise `serial.SerialException("Could not exclusively lock
+> port")`. For the read: a fake serial whose
 > `readline()` raises `serial.SerialException("device reports readiness to read but returned no
 > data")`: `pytest.raises(SystemExit)` with code 1, and the ERROR line is logged.
 > (b) Startup refuses to run without an OpenAI key. In `main()`, after parsing and

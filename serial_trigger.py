@@ -28,6 +28,8 @@ try:
 except Exception:
     class LedClient:  # fallback no-op
         def __init__(self, *a, **kw): pass
+        @classmethod
+        def sharing(cls, ser): return cls()
         def start(self, *a, **kw): pass
         def stop(self): pass
         def close(self): pass
@@ -59,7 +61,13 @@ SFX_START = str(_BASE_DIR / "sfx" / "sfx_magic.mp3")      # Plays when mic is re
 SFX_END   = str(_BASE_DIR / "sfx" / "sfx_generate.mp3")   # Plays when AI starts generating
 
 # LED control usually shares the same board/port
-LED_PORT = None  # set by main(): --port, or the detected Arduino; None means no LEDs
+LED_PORT = None  # simulate mode only, set by main(): --port or the detected Arduino; None means no LEDs
+
+# The one LED client for the whole run. Every coin uses it; none opens its own.
+# Opening the Arduino's port resets the Uno, so it is opened once per run:
+# hardware mode shares the port it reads coins from (LedClient.sharing), and
+# simulate mode opens LED_PORT once at start. Until then it does nothing.
+_led = LedClient(None)
 
 # ---- Module-level config (set at startup by main()) ----
 _config = None
@@ -322,8 +330,8 @@ def on_coin_event(pulses: int, dry_run: bool = False):
     """
     log.info(f"💰 [COIN EVENT] pulses={pulses}")
 
-    # Create a safe LED client (no-op if not available)
-    led = LedClient(LED_PORT, BAUD)
+    # The run's shared LED client (a no-op if there is no Arduino).
+    led = _led
 
     try:
         # A missing provider is a startup wiring bug, not a microphone fault.
@@ -386,18 +394,24 @@ def on_coin_event(pulses: int, dry_run: bool = False):
         log.error(f"  ✗ Unexpected error in coin event handler: {e}")
         print_fallback(dry_run)
     finally:
-        led.stop()
-        led.close()
+        led.stop()  # the connection stays open for the next coin
 
 # ----------------------------------------
 # Modes
 # ----------------------------------------
 def listen_serial_mode(port: str, dry_run: bool = False):
-    """Listen for COIN X messages from Arduino on serial port."""
+    """Listen for COIN X messages from Arduino on serial port.
+
+    The port is opened once for the whole run. The LED commands go down the
+    same connection, so a coin never resets the Uno by opening it again.
+    exclusive=True stops a second copy of Narly from sharing the port.
+    """
+    global _led
     log.info(f"🔌 Hardware mode: Listening on {port} @ {BAUD}...")
     log.info("   Waiting for coin insertion...")
 
-    ser = serial.Serial(port, BAUD, timeout=1)
+    ser = serial.Serial(port, BAUD, timeout=1, exclusive=True)
+    _led = LedClient.sharing(ser)  # LEDs use this same open port
     line_re = re.compile(r"^\s*COIN\s+(\d+)\s*$")
 
     # Allow Arduino to settle and ignore spurious signals during boot
@@ -463,14 +477,15 @@ def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10,
     becomes the saved clip's label (the script's question number). A blank
     line takes the next number in sequence: 1, 2, 3, ...
     """
-    global _clip_label
+    global _clip_label, _led
     log.info("🎮 Simulation mode")
 
-    # Reset LEDs to DIM on startup (clears any leftover state from previous session)
+    # Open the LEDs once for the whole run (a no-op if LED_PORT is None), and
+    # reset them to DIM, which clears any leftover state from the last session.
+    # The port stays open until Narly exits, which closes it.
     log.info("   Initializing LEDs...")
-    led_init = LedClient(LED_PORT, BAUD)
-    led_init.stop()
-    led_init.close()
+    _led = LedClient(LED_PORT, BAUD)
+    _led.stop()
     log.info("   LEDs ready")
     if auto:
         log.info(f"   Auto-triggering every {interval} seconds (Ctrl+C to stop)")
@@ -688,7 +703,6 @@ def main():
         # Hardware mode needs the Arduino for coins, so wait for it if it isn't there yet.
         port = args.port or wait_for_port()
         log.info(f"Arduino port: {port}")
-        LED_PORT = port  # the LEDs are on the same board
         listen_serial_mode(port, dry_run=args.dry_run)
     else:
         # Simulate mode doesn't need the Arduino: use it for LEDs if it's there,
