@@ -72,6 +72,10 @@ _led = LedClient(None)
 # ---- Module-level config (set at startup by main()) ----
 _config = None
 
+# Which input device the real microphone opens. None means the computer's
+# default input. main() sets it from MIC_NAME when the real mic is used.
+_mic_index = None
+
 # ---- Module-level providers (set at startup by main(), or by a test) ----
 # These are the four things Narly needs that involve hardware or the network:
 # a way to get audio from the mic, a way to turn it into text, a way to ask for
@@ -178,6 +182,25 @@ def wait_for_port(find=None, sleep=time.sleep):
 # ----------------------------------------
 # Recording / Transcription
 # ----------------------------------------
+def pick_mic_index(names, wanted):
+    """Find the microphone to use by part of its name.
+
+    `names` is the list of input device names the computer reports, in order
+    (the position in the list is the device number). `wanted` is part of the
+    name to look for, such as "fifine"; upper and lower case don't matter.
+
+    Returns the device number of the first name that contains `wanted`, or
+    None when nothing matches or `wanted` is empty. None means "use the
+    computer's default input", which is what Narly did before.
+    """
+    if not wanted:
+        return None
+    wanted = wanted.lower()
+    for index, name in enumerate(names):
+        if wanted in name.lower():
+            return index
+    return None
+
 def mic_get_audio(on_ready, recognizer=None, mic=None):
     """The REAL microphone provider. There is no FakeMic class — in tests a
     one-line lambda stands in for this function.
@@ -205,11 +228,14 @@ def mic_get_audio(on_ready, recognizer=None, mic=None):
     correctly recorded as `mic_error` rather than surfacing as a vague
     "unexpected error" outside it.
 
+    The device it opens is `_mic_index`, the one main() chose by name
+    (None means the computer's default input).
+
     `recognizer` and `mic` can be passed in for testing; by default the real
     ones are created.
     """
     recognizer = recognizer or sr.Recognizer()
-    mic = mic or sr.Microphone()
+    mic = mic or sr.Microphone(device_index=_mic_index)
 
     with mic as source:
         # Quick ambient noise calibration BEFORE the chime - the attendee
@@ -399,6 +425,19 @@ def on_coin_event(pulses: int, dry_run: bool = False):
 # ----------------------------------------
 # Modes
 # ----------------------------------------
+def _arduino_disconnected(error):
+    """Log that the Arduino went away and end the run with exit code 1.
+
+    There is no reconnect inside the program. On the Pi, systemd restarts
+    Narly, and the restart waits for the Arduino to be plugged back in. On the
+    laptop, start Narly again by hand. (listen_serial_mode's `finally` closes
+    the port on the way out.)
+    """
+    log.error(f"Arduino disconnected: {error}. "
+              "A restart will look for it again (on the Pi, systemd restarts Narly by itself).")
+    sys.exit(1)
+
+
 def listen_serial_mode(port: str, dry_run: bool = False):
     """Listen for COIN X messages from Arduino on serial port.
 
@@ -410,21 +449,38 @@ def listen_serial_mode(port: str, dry_run: bool = False):
     log.info(f"🔌 Hardware mode: Listening on {port} @ {BAUD}...")
     log.info("   Waiting for coin insertion...")
 
-    ser = serial.Serial(port, BAUD, timeout=1, exclusive=True)
+    try:
+        ser = serial.Serial(port, BAUD, timeout=1, exclusive=True)
+    except (serial.SerialException, OSError) as e:
+        # Most often another copy of Narly already holds the port (exclusive=True
+        # refuses to share it). Say so plainly and stop, rather than a traceback.
+        log.error(f"Could not open the Arduino port {port}: {e} "
+                  "(is Narly already running? On the Pi: sudo systemctl stop narly)")
+        sys.exit(1)
     _led = LedClient.sharing(ser)  # LEDs use this same open port
     line_re = re.compile(r"^\s*COIN\s+(\d+)\s*$")
 
     # Allow Arduino to settle and ignore spurious signals during boot
     log.info("   Initializing Arduino...")
     time.sleep(3)
-    ser.reset_input_buffer()  # Clear any buffered boot messages
+    try:
+        ser.reset_input_buffer()  # Clear any buffered boot messages
+    except (serial.SerialException, OSError) as e:
+        ser.close()
+        _arduino_disconnected(e)
     log.info("   Ready!")
 
     first_coin_ignored = False  # Flag to ignore first spurious coin signal
 
     try:
         while True:
-            raw = ser.readline().decode("utf-8", errors="ignore")
+            # Only the serial read is guarded here: an unplugged cable shows up
+            # as an error from readline(). on_coin_event handles its own errors.
+            try:
+                line = ser.readline()
+            except (serial.SerialException, OSError) as e:
+                _arduino_disconnected(e)
+            raw = line.decode("utf-8", errors="ignore")
             if not raw:
                 continue
             raw = raw.strip()
@@ -663,8 +719,51 @@ def build_parser():
     return parser
 
 
+def check_can_start(args, env=os.environ):
+    """Stop with exit code 1 if this run would need OpenAI but has no key.
+
+    Without the key, every coin would print the "Narly drifted off" slip and
+    never say why. An --offline run uses a stand-in fortune, so it needs no key.
+    (A --question run without --offline still asks OpenAI, so it does.)
+
+    `env` is where the key is looked up. It is os.environ, which already holds
+    the values from .env: ai_client loads .env when serial_trigger imports it.
+    Tests pass their own dict instead. An empty key counts as missing.
+    """
+    if args.offline:
+        return
+    if not env.get("OPENAI_API_KEY"):
+        log.error("No OPENAI_API_KEY found. Put it in the .env file next to serial_trigger.py "
+                  "(copy .env.example to .env and fill it in), or run with --offline.")
+        sys.exit(1)
+
+
+def choose_mic(env=os.environ):
+    """Look up the mic named by MIC_NAME (default "fifine") and log the choice.
+
+    The Fifine AM8 reports itself as "fifine Microphone" (the model number
+    isn't in the name), so "fifine" is what finds it.
+
+    Returns the device number to open, or None for the computer's default
+    input. Listing the devices needs PyAudio; if that fails for any reason,
+    Narly still starts, on the default input, with a WARNING saying why.
+    """
+    wanted = env.get("MIC_NAME", "fifine")
+    try:
+        names = sr.Microphone.list_microphone_names()
+    except Exception as e:
+        log.warning(f"Microphone: could not list the input devices ({_flatten(str(e))}), "
+                    "using the default input")
+        return None
+    index = pick_mic_index(names, wanted)
+    if index is None:
+        log.info(f'Microphone: "{wanted}" not found, using the default input')
+    else:
+        log.info(f"Microphone: {names[index]} (device {index})")
+    return index
+
 def main():
-    global LED_PORT, _config
+    global LED_PORT, _config, _mic_index
 
     parser = build_parser()
     args = parser.parse_args()
@@ -689,6 +788,9 @@ def main():
             print(f"  {name}")
         sys.exit(0)
 
+    # Refuse to start without an OpenAI key, unless the run is offline.
+    check_can_start(args)
+
     # Load persona config once at startup
     _config = load_config(args.persona)
     init_ai(args.persona)
@@ -697,6 +799,10 @@ def main():
     # Pick the real mic/recognizer/AI or their stand-ins from the flags.
     # The speaker is always the real player: it goes quiet by itself if there is no sound device.
     get_audio, transcribe, fortune = build_providers(args)
+    # Only when the real mic is listening: open it by name, so the AM8 is used
+    # even when it isn't the computer's default input.
+    if not (args.clip or args.question or args.offline):
+        _mic_index = choose_mic()
     configure_providers(get_audio, transcribe, fortune, PygameAudioOut())
 
     if args.mode == "hardware":

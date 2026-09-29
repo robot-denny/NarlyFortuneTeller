@@ -67,7 +67,8 @@ direct USB. `configure_providers` and `fakes.py` let the coin flow run in tests 
 - **The mic is chosen by name.** `pick_mic_index(names, wanted)` is a pure function. It finds the
   first device whose name contains `wanted` (case-insensitive), otherwise returns `None`, which
   means the system default, as today. `wanted` comes from the optional `.env` value `MIC_NAME`,
-  default `AM8`, added to `.env.example`. `main()` logs which mic was chosen. The exact name the
+  default `fifine`, added to `.env.example`. (Planned as `AM8`; changed in Step 5 because macOS
+  lists the mic as `fifine Microphone`, with no model number.) `main()` logs which mic was chosen. The exact name the
   AM8 reports on the Pi isn't known yet. Step 8 records it.
 - **Pi OS: Raspberry Pi OS Lite (64-bit), Legacy (Bookworm), with Python 3.11.** The current Pi
   OS ships Python 3.13, and `SpeechRecognition` needs `audioop`, which was removed in 3.13 (see

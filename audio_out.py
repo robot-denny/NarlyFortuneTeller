@@ -22,6 +22,13 @@ log = get_logger(__name__)
 # booth's log clean.
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
+# pygame's sound library (SDL) takes over SIGTERM by default and turns it into a
+# "quit" event that Narly never reads, so he would ignore it. SIGTERM is what
+# `systemctl stop narly` and a shutdown send on the Pi. This keeps SIGTERM
+# stopping him straight away. Ctrl+C is unaffected. Must be set before pygame
+# is imported.
+os.environ.setdefault("SDL_NO_SIGNAL_HANDLERS", "1")
+
 # The longest `play(..., wait=True)` will wait. The readiness chime is about 2s;
 # if the speaker never reports it finished, give up rather than freeze the booth.
 MAX_WAIT_SECONDS = 5.0

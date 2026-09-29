@@ -80,3 +80,68 @@ def test_two_coins_share_one_connection_and_both_light_the_leds(monkeypatch):
     for coin in (first_coin, second_coin):
         assert "START GLOW" in _commands(coin)
         assert "STOP" in _commands(coin)
+
+
+# ---- An Arduino that goes away ends the run cleanly ----
+#
+# On the Pi, systemd restarts Narly after a non-zero exit, and the restart
+# waits for the Arduino to come back. So an unplug must end the run with exit
+# code 1 and one ERROR line the operator can read, not a traceback.
+
+
+def _errors(caplog):
+    return [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]
+
+
+class UnpluggedArduino(FakeArduino):
+    """Reads like an Arduino whose USB cable is pulled: pyserial raises
+    SerialException from `readline()`."""
+
+    def readline(self):
+        raise serial_trigger.serial.SerialException(
+            "device reports readiness to read but returned no data")
+
+
+def test_an_unplugged_arduino_ends_the_run_with_code_1_and_one_error(monkeypatch, caplog):
+    monkeypatch.setattr(serial_trigger.serial, "Serial", UnpluggedArduino)
+    monkeypatch.setattr(serial_trigger.time, "sleep", lambda s: None)
+
+    with pytest.raises(SystemExit) as exit_info:
+        serial_trigger.listen_serial_mode("/dev/fake-arduino", dry_run=True)
+
+    assert exit_info.value.code == 1
+    errors = _errors(caplog)
+    assert len(errors) == 1
+    assert errors[0].startswith("Arduino disconnected: ")
+    assert "returned no data" in errors[0]
+    assert "restart" in errors[0]
+
+
+def test_a_port_that_cannot_be_opened_ends_the_run_with_code_1_and_a_hint(monkeypatch, caplog):
+    def locked_port(*args, **kwargs):
+        raise serial_trigger.serial.SerialException("Could not exclusively lock port")
+
+    monkeypatch.setattr(serial_trigger.serial, "Serial", locked_port)
+    monkeypatch.setattr(serial_trigger.time, "sleep", lambda s: None)
+
+    with pytest.raises(SystemExit) as exit_info:
+        serial_trigger.listen_serial_mode("/dev/fake-arduino", dry_run=True)
+
+    assert exit_info.value.code == 1
+    errors = _errors(caplog)
+    assert len(errors) == 1
+    assert errors[0].startswith("Could not open the Arduino port /dev/fake-arduino: ")
+    assert "Could not exclusively lock port" in errors[0]
+    assert "is Narly already running?" in errors[0]
+    assert "sudo systemctl stop narly" in errors[0]
+
+
+def test_ctrl_c_still_exits_quietly(monkeypatch, caplog):
+    FakeArduino.opened = []
+    monkeypatch.setattr(serial_trigger.serial, "Serial", FakeArduino)
+    monkeypatch.setattr(serial_trigger.time, "sleep", lambda s: None)
+    monkeypatch.setattr(FakeArduino, "LINES", [])  # the first read is Ctrl+C
+
+    serial_trigger.listen_serial_mode("/dev/fake-arduino", dry_run=True)  # no SystemExit
+
+    assert _errors(caplog) == []
