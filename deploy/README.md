@@ -100,7 +100,17 @@ To leave the Pi at any point, type `exit`. You're back on the laptop.
 The Pi can store Wi-Fi networks it can't see right now and join them later. Store your phone's
 hotspot now, so the Pi can go online at the booth before the event Wi-Fi is set up.
 
-1. **On the Pi**, with your phone's hotspot name and password:
+First, on an iPhone:
+
+- **Give the phone a plain name**, such as `DennisPhone` (**Settings → General → About → Name**).
+  The hotspot uses the phone's name, and iPhone names often have a curly apostrophe (’) that you
+  can't type to match. No apostrophes or spaces is safest.
+- **Settings → Personal Hotspot:** turn on **Maximize Compatibility**, and note the **Wi-Fi
+  Password**.
+- **An iPhone only shows its hotspot while the Personal Hotspot screen is open.** Keep that
+  screen open whenever the Pi needs to find the hotspot. Once joined, it stays joined.
+
+1. **On the Pi**, with your phone's hotspot name and password (keep the double quotes):
 
    ```bash
    sudo nmcli connection add type wifi ifname wlan0 con-name hotspot ssid "<name>" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "<password>"
@@ -117,13 +127,41 @@ hotspot now, so the Pi can go online at the booth before the event Wi-Fi is set 
    `preconfigured`).
 
 **Test the hotspot once at home, before the event.** The event Wi-Fi details only arrive at setup
-the day before, so the hotspot is how you'll reach the Pi at first.
+the day before, so the hotspot is how you'll reach the Pi at first. You don't need to turn the
+home Wi-Fi off for this:
 
-1. Turn on the phone's hotspot, and join the laptop to it.
-2. Take the Pi out of range of the home Wi-Fi, or switch the home router off for a moment.
-3. **On the Pi**, `sudo reboot`. You'll be logged out.
-4. **On the laptop** (still on the hotspot), `ssh <user>@narly.local` again. If you get the Pi's
-   prompt, the hotspot works. Turn the home Wi-Fi back on afterwards.
+1. Open the phone's **Personal Hotspot** screen and leave it open.
+2. **On the Pi**, check it can see the hotspot:
+
+   ```bash
+   sudo nmcli device wifi rescan
+   nmcli device wifi list | grep -i dennis
+   ```
+
+   Use part of your hotspot's name in place of `dennis`. You should see one line with the name.
+   If nothing prints, check the Personal Hotspot screen is still open and try again.
+3. **On the Pi**, move it onto the hotspot:
+
+   ```bash
+   sudo nmcli connection up hotspot
+   ```
+
+   The terminal freezes. That's the Pi leaving your home Wi-Fi, and it means it worked. (If
+   instead you get `Error: Connection activation failed`, the password is wrong.) Close that
+   Terminal tab with **Cmd+W**. Typing `exit` won't work, because the connection is gone.
+4. Join the **laptop** to the hotspot. In a new Terminal tab (**Cmd+T**),
+   `ssh <user>@narly.local`. If you get the Pi's prompt, the hotspot works.
+5. Move the Pi back to home Wi-Fi. **On the Pi:** `sudo nmcli connection up preconfigured`. The
+   terminal freezes again. Close the tab, put the laptop back on home Wi-Fi, and SSH in as usual.
+
+If `narly.local` isn't found on the hotspot, find the Pi's address. **On the laptop:**
+
+```bash
+for i in $(seq 1 14); do ping -c 1 -t 1 172.20.10.$i >/dev/null & done; wait; arp -a | grep 172.20.10
+```
+
+`172.20.10.1` is the phone and one address is the laptop (`ipconfig getifaddr en0` shows which).
+Any other address with a value after `at` is the Pi: `ssh <user>@172.20.10.X`.
 
 ### 4. Get Narly's code
 
@@ -369,7 +407,8 @@ ignored.
 
 The event Wi-Fi's name and password usually arrive at setup, the day before the event.
 
-1. Turn on your phone's hotspot.
+1. Turn on your phone's hotspot, and **keep the Personal Hotspot screen open** until the Pi has
+   joined.
 2. Join the laptop to the hotspot.
 3. Power on the Pi. It joins the hotspot by itself, because you stored it in step 3.
 4. **On the laptop**, log in: `ssh <user>@narly.local`.

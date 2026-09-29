@@ -180,7 +180,7 @@ All **on the Pi**, from `~/fortune-service`.
   `-b -1` means "the boot before this one". You should see `3`.
   Result:
 
-- [ ] **10. The booth Wi-Fi, rehearsed with the phone hotspot.**
+- [x] **10. The booth Wi-Fi, rehearsed with the phone hotspot.**
   This is the test at the end of step 3 of the guide. Turn the home Wi-Fi off, or take the Pi out
   of its range. Turn on the phone's hotspot and join the laptop to it. Power the Pi on (or **on
   the Pi**, `sudo reboot`, before the home Wi-Fi goes).
@@ -191,7 +191,10 @@ All **on the Pi**, from `~/fortune-service`.
   ```
 
   You should get the Pi's prompt. Turn the home Wi-Fi back on afterwards.
-  Result:
+  Result: **pass, 2026-09-29.** The hotspot `DennisPhone` (WPA2, channel 11) was stored and the
+  Pi joined it with `sudo nmcli connection up hotspot`. The laptop, on the hotspot, logged in with
+  `ssh dkardys@narly.local`. The first try (home Wi-Fi off, waiting for the Pi to switch) failed,
+  because the iPhone wasn't broadcasting: see Problems found.
 
 - [ ] **11. No low power after a print.**
   Right after a ticket prints, **on the Pi:**
@@ -207,4 +210,15 @@ All **on the Pi**, from `~/fortune-service`.
 
 Each problem: which item, what you saw, what fixed it (the commit, or the guide section), and
 whether the re-check passed.
+
+- **Item 10: the Pi couldn't see the iPhone hotspot.** With the home Wi-Fi off, the Pi never
+  joined (the address scan found only the phone and the laptop), and `nmcli device wifi list`
+  didn't show `DennisPhone`. Cause: an iPhone only broadcasts its hotspot while the Personal
+  Hotspot screen is open. With the screen open and `sudo nmcli device wifi rescan`, it showed up,
+  and `sudo nmcli connection up hotspot` joined it. **Fix:** guide step 3 now says to rename the
+  phone plainly, turn on Maximize Compatibility, keep the screen open, and test with
+  `nmcli connection up` (no need to turn the home Wi-Fi off). The booth steps say to keep the
+  screen open until the Pi joins. Re-check: passed (this was the test).
+- **Item 10, minor: a frozen SSH session wouldn't close** with Enter, `~`, `.`. Opening a new
+  Terminal tab (Cmd+T) worked. The guide now says to close the tab with Cmd+W.
 
