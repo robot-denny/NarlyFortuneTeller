@@ -108,15 +108,31 @@ def test_configure_logging_leaves_handlers_it_did_not_add_alone(tmp_path):
         root.removeHandler(someone_elses)
 
 
-def test_unwritable_log_file_falls_back_to_stdout_instead_of_crashing(capsys):
+def test_unwritable_log_file_falls_back_to_stdout_instead_of_crashing(tmp_path, capsys):
     """A bad --log-file path must not take the whole program down before the first coin.
     Logging stays on stdout and says what went wrong."""
-    configure_logging("/no/such/directory/narly.log")  # must not raise
+    # A "folder" that is really a file can never be created, whoever runs the test.
+    not_a_folder = tmp_path / "not_a_folder"
+    not_a_folder.write_text("")
+    bad_path = str(not_a_folder / "narly.log")
+    configure_logging(bad_path)  # must not raise
 
     ours = _our_handlers_on_root()
     assert len(ours["stdout"]) == 1, "stdout handler missing after file handler failed"
     assert len(ours["file"]) == 0, "a file handler should not exist for an unwritable path"
 
     out = capsys.readouterr().out
-    assert "ERROR" in out and "/no/such/directory/narly.log" in out, (
+    assert "ERROR" in out and bad_path in out, (
         f"expected an ERROR line naming the bad path on stdout, got: {out!r}")
+
+
+def test_log_file_in_a_missing_folder_creates_the_folder(tmp_path):
+    """--log-file clips/session.log must work on a fresh checkout where clips/ does not
+    exist yet. The folder is made, and the log lands in it."""
+    log_file = tmp_path / "clips" / "session.log"
+    configure_logging(str(log_file))
+
+    get_logger("test").info("first line of the session")
+    _flush_all_handlers()
+
+    assert "first line of the session" in log_file.read_text(encoding="utf-8")

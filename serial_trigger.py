@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 from ai_client import get_ai_response, init_ai
 from audio_out import PygameAudioOut
-from capture_client import CaptureOutcome, capture_question, wav_get_audio
+from capture_client import CaptureOutcome, capture_question, clip_saving_get_audio, wav_get_audio
 from fakes import FakeFortune, FakeTranscriber, typed_get_audio
 from formatters import render_ticket
 from print_client import print_ticket
@@ -64,6 +64,12 @@ _get_audio = None    # callable(on_ready) -> sr.AudioData, or raises
 _transcribe = None   # callable(audio) -> str, or raises
 _fortune = None      # callable(question) -> str
 _audio_out = None    # object with .play(path, wait) — PygameAudioOut, or FakeAudioOut in tests
+
+# ---- Clip label (only used with --save-clips) ----
+# The name of the next saved clip, e.g. "27" for the script's question 27.
+# simulate_mode sets it from what the operator types at the coin prompt, just
+# before each coin; the clip-saving wrapper reads it when the mic opens.
+_clip_label = None
 
 
 def configure_providers(get_audio, transcribe, fortune, audio_out):
@@ -369,8 +375,31 @@ def listen_serial_mode(port: str, dry_run: bool = False):
     finally:
         ser.close()
 
-def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10):
-    """Simulate coin events for testing without hardware."""
+def pick_clip_label(typed: str, clip_count: int) -> tuple[str, int]:
+    """Name the next clip from what was typed at the coin prompt.
+
+    Returns the label and the updated count. A typed question number is used
+    as it is. A blank line takes the next number. So does a label with a space
+    or a slash: a space would save the clip under one name and score it under
+    another, and a slash would save it outside the clips folder. That case is
+    logged as a WARNING, so the session log shows which number was used instead.
+    """
+    if typed and not any(c.isspace() or c in "/\\" for c in typed):
+        return typed, clip_count
+    clip_count += 1
+    if typed:
+        log.warning(f'⚠️  Label "{typed}" has a space or slash; saving as clip {clip_count}')
+    return str(clip_count), clip_count
+
+
+def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10, save_clips: bool = False):
+    """Simulate coin events for testing without hardware.
+
+    With ``save_clips``, whatever is typed at the coin prompt before Enter
+    becomes the saved clip's label (the script's question number). A blank
+    line takes the next number in sequence: 1, 2, 3, ...
+    """
+    global _clip_label
     log.info("🎮 Simulation mode")
 
     # Reset LEDs to DIM on startup (clears any leftover state from previous session)
@@ -390,9 +419,14 @@ def simulate_mode(dry_run: bool = False, auto: bool = False, interval: int = 10)
             log.info("🛑 Exiting simulation mode.")
     else:
         log.info("   Press ENTER to simulate coin insertion (Ctrl+C to stop)")
+        if save_clips:
+            log.info("   Saving clips: type the question number before ENTER (blank = next number)")
+        clip_count = 0  # blank labels count up from 1 within this session
         try:
             while True:
-                input("Press ENTER for coin → ")
+                typed = input("Press ENTER for coin → ").strip()
+                if save_clips:
+                    _clip_label, clip_count = pick_clip_label(typed, clip_count)
                 on_coin_event(pulses=1, dry_run=dry_run)
         except KeyboardInterrupt:
             log.info("🛑 Exiting simulation mode.")
@@ -405,6 +439,9 @@ def build_providers(args):
 
     - ``--clip PATH``   replays a recording instead of listening on the mic.
     - ``--question T``  skips the mic and recognizer entirely and uses T.
+    - ``--save-clips DIR`` keeps each clip the real mic hears as
+      ``DIR/<label>.wav``. Without it the mic is returned unwrapped, so a
+      normal run saves nothing.
     - ``--offline``     replaces the recognizer and the fortune service so no
       network is used. With neither --clip nor --question it also replaces the
       mic with the persona's default question typed in, so an offline run needs
@@ -424,6 +461,11 @@ def build_providers(args):
     elif args.question or args.offline:
         get_audio = typed_get_audio(question_text)
         log.info(f'Using typed question instead of the microphone: "{question_text}"')
+    elif getattr(args, "save_clips", None):
+        # main() refuses --save-clips with --clip/--question/--offline, so this
+        # only ever wraps the real microphone.
+        get_audio = clip_saving_get_audio(mic_get_audio, args.save_clips, lambda: _clip_label)
+        log.info(f"Saving each clip the microphone hears to: {args.save_clips}")
 
     if args.question or args.offline:
         # Typed text is not audio, so the recognizer must be the stand-in that
@@ -525,9 +567,29 @@ def main():
         )
     )
 
+    parser.add_argument(
+        "--save-clips",
+        metavar="DIR",
+        default=None,
+        help=(
+            "Simulate only, for a measuring session. Save what the microphone heard on each coin "
+            "as DIR/<label>.wav. Type the script's question number at the coin prompt before "
+            "ENTER to set the label; a blank line takes the next number. Use with --log-file so "
+            "the session can be scored. Cannot be combined with --offline, --clip, --question, or --auto."
+        )
+    )
+
     args = parser.parse_args()
     if args.mode != "simulate" and (args.offline or args.clip or args.question):
         parser.error("--offline/--clip/--question are only valid with --mode simulate")
+    if args.save_clips and args.mode != "simulate":
+        parser.error("--save-clips is only valid with --mode simulate")
+    if args.save_clips and (args.offline or args.clip or args.question):
+        parser.error("--save-clips cannot be combined with --offline, --clip, or --question: "
+                     "only live microphone audio is worth saving")
+    if args.save_clips and args.auto:
+        parser.error("--save-clips cannot be combined with --auto: each clip is named by the "
+                     "question number typed at the coin prompt")
     if args.clip and not os.path.isfile(args.clip):
         parser.error(f"--clip file not found: {args.clip}")
     configure_logging(args.log_file)
@@ -561,7 +623,8 @@ def main():
             sys.exit(1)
         listen_serial_mode(port, dry_run=args.dry_run)
     else:
-        simulate_mode(dry_run=args.dry_run, auto=args.auto, interval=args.interval)
+        simulate_mode(dry_run=args.dry_run, auto=args.auto, interval=args.interval,
+                      save_clips=bool(args.save_clips))
 
 if __name__ == "__main__":
     main()

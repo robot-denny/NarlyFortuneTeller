@@ -56,8 +56,8 @@ under `_work/shipped/`.
 - Increment 1, measure and fix attendee capture: **COMPLETE** (2026-09-28). Logging (V2 `3a`),
   offline testing, listening on the chime's end, default threshold, pygame cues. The V2 `3b`
   watchdog was dropped: systemd replaces it on the Pi.
-- Increment 2, live baseline: **NOW**. A directional mic on a stand (a Fifine AM8 stands in
-  until the Samson Q20 arrives), fixture clips, the first measured success rate.
+- Increment 2, live baseline: **NOW**. The Fifine AM8 (the chosen mic; the Samson Q20 is out of
+  scope) on a stand, a replay set of clips, the first measured success rate. Deliberately lean.
 - Increment 3, Pi port (V2 `3c`–`3f`): **NEXT**. Increment 4, endpointing and recognition, follows.
 - Sensors, toggle switch, state machine (was Phase 4): **LATER**.
 
