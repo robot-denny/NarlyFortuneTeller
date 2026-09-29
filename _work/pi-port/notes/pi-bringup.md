@@ -257,5 +257,7 @@ whether the re-check passed.
   as "what do you think of a broccoli team". Narly worked out it meant Umbraco, but quoted
   "broccoli team" first, which breaks the persona's rule. "broccoli" wasn't in its list of
   Umbraco sound-alikes. **Fix:** added `broccoli, a broccoli, broccoli team` to that list in
-  `personas/umbraco-2026/prompts.md`. Re-check: ask the same question on the Pi after `git pull`
-  and `sudo systemctl restart narly`.
+  `personas/umbraco-2026/prompts.md`. Re-check: **passed.** Heard as "broccoli 18", and the ticket
+  answered about Umbraco 18. (One try before that caught only "what do you think". The end of the
+  question was cut off, and it got a generic fortune. That's the known end-of-question cut-off, for
+  the Step 9 session to measure, not the persona.)
