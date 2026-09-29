@@ -117,7 +117,8 @@ further down do need one, and say so: replaying a clip without `--offline`, and 
 real microphone.
 
 Narly writes fortunes with OpenAI's `gpt-4.1-mini` model. On each computer that runs Narly, open
-`.env` and make sure it has the line `OPENAI_MODEL=gpt-4.1-mini`. If the fortunes ever feel too
+`.env` and make sure it has the line `OPENAI_MODEL=gpt-4.1-mini`. A new computer can start from a
+copy of `.env.example`, which already has it. If the fortunes ever feel too
 plain, `gpt-4.1` is the step up: smarter, a little slower, and it costs more per fortune.
 
 ## Run the automated tests

@@ -41,6 +41,14 @@ confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/li
   laptop clips there. The laptop score is the comparison. If the Pi scores worse and can't be
   fixed easily before an event, that event runs on the laptop.
 
+**Bound the fortune call's wait.** Found in the umbraco-2026 code review (2026-09-29).
+`generate_fortune_with_timeout` (`serial_trigger.py`) logs its 30 s `TIMEOUT_AI`, but leaving its
+`with ThreadPoolExecutor(...)` block waits for the call to finish anyway. The OpenAI client in
+`ai_client.py` sets no timeout of its own (the library's default is 10 minutes, with retries), so a
+stalled call holds the guest until OpenAI gives up, not until 30 s. Fix: pass a request timeout
+to the OpenAI client and stop the executor waiting on a timed-out call. Pre-existing, not caused by
+the move to `gpt-4.1-mini`; the owner accepts the extra seconds that model adds.
+
 **Increment 4 — Endpointing and recognition.** Measured against the Increment 2 fixtures.
 
 - Silero VAD replaces energy-based endpointing, which cannot find a pause in noise. V3 `2a`.
