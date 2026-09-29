@@ -63,7 +63,11 @@ direct USB. `configure_providers` and `fakes.py` let the coin flow run in tests 
 - **Startup refuses to run without `OPENAI_API_KEY` unless `--offline` is set.** A missing `.env`
   otherwise prints "Narly drifted off" on every coin and never says why, since `ai_client` builds
   the client per call. The check runs in `main()` and exits 1 with a message naming `.env`. On
-  the Pi, systemd's retry limit then stops the loop, which is the spec's "persistent fault".
+  the Pi, the unit never restarts on that code (`RestartPreventExitStatus=78`), which is the
+  spec's "persistent fault". It exits with **78**, not 1. (Changed after the Steps 4–7 review:
+  the unit has no start limit, `StartLimitIntervalSec=0`, so a flaky Arduino cable restarts
+  forever instead of using up a limit and stopping Narly for the day.) Hardware mode plays a
+  **ready cue** (`sfx/sfx_start.mp3`) once `Ready!`, so the operator can tell from the booth.
 - **The mic is chosen by name.** `pick_mic_index(names, wanted)` is a pure function. It finds the
   first device whose name contains `wanted` (case-insensitive), otherwise returns `None`, which
   means the system default, as today. `wanted` comes from the optional `.env` value `MIC_NAME`,
@@ -452,8 +456,8 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > the first coin after start was ignored.
 > (7) Unplug the Arduino, plug it into a different USB port on the Pi: `Arduino disconnected`
 > is logged, then waiting, then a coin works.
-> (8) Rename `.env` away and restart: after the retry limit, `systemctl status narly` shows
-> failed, and the journal names `.env`. Put it back and run `sudo systemctl reset-failed narly &&
+> (8) Rename `.env` away and restart: Narly stops at once (exit 78, no restart), `systemctl
+> status narly` shows it, and the journal names `.env`. Put it back and run `sudo systemctl reset-failed narly &&
 > sudo systemctl start narly`.
 > (9) Three fortunes, wait 20 s, pull the power, boot: `journalctl -u narly -b -1 | grep -c
 > 'capture outcome='` shows 3.

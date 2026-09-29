@@ -62,3 +62,8 @@ def log_lines(caplog):
         return matches
 
     return _find
+
+
+def errors_logged(caplog):
+    """The messages of every ERROR record captured so far, in order."""
+    return [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]

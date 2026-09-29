@@ -1,0 +1,43 @@
+# narly.service — tells the Raspberry Pi to run Narly as a background service.
+#
+# What it does: systemd (the Pi's service manager) starts Narly when the Pi powers up,
+# and starts him again 5 seconds after he stops for any reason. His printed output goes
+# to the system log (journald), which you read with:  journalctl -u narly -f
+#
+# This is a template. deploy/setup-pi.sh fills in @USER@, @DIR@ and @PERSONA@ and installs
+# the result as /etc/systemd/system/narly.service. Do not copy this file there by hand.
+#
+# Why these settings:
+# - No wait for the network. Narly makes no network call until the first coin, so he starts
+#   straight away. If Wi-Fi is not up by the first coin, that coin gets the usual fallback slip.
+# - Restart=always, with no start limit (StartLimitIntervalSec=0). A hardware fault, such as the
+#   Arduino being unplugged or a loose cable dropping out, makes Narly exit with code 1. He is
+#   restarted, and then waits for the Arduino to come back, however many times that happens.
+#   (A start limit would count every one of those restarts, and a flaky cable could use it up in
+#   a minute and leave him stopped for the rest of the day.)
+# - RestartPreventExitStatus=78. A setup mistake that retrying can't fix, such as a missing
+#   OPENAI_API_KEY in .env, makes Narly exit with code 78 instead. He is then NOT restarted: he
+#   stops at once, and the log says why. Fix it, then:  sudo systemctl restart narly
+# - PYTHONUNBUFFERED=1 sends each log line to the journal at once, not in batches, so a power
+#   cut loses as little as possible.
+# - SDL_AUDIODRIVER=alsa makes pygame (the cue sounds) talk to the Pi's sound system directly.
+# - SDL_NO_SIGNAL_HANDLERS=1 lets systemd's stop signal end Narly. audio_out.py already sets
+#   it; setting it here as well is a harmless backup.
+
+[Unit]
+Description=Narly fortune teller
+StartLimitIntervalSec=0
+
+[Service]
+User=@USER@
+WorkingDirectory=@DIR@
+ExecStart=@DIR@/.venv/bin/python serial_trigger.py --mode hardware --persona @PERSONA@
+Environment=PYTHONUNBUFFERED=1
+Environment=SDL_AUDIODRIVER=alsa
+Environment=SDL_NO_SIGNAL_HANDLERS=1
+Restart=always
+RestartSec=5
+RestartPreventExitStatus=78
+
+[Install]
+WantedBy=multi-user.target

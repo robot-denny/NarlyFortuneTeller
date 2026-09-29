@@ -83,9 +83,11 @@ choices are recorded below so the owner can overrule them.
   hand and never committed.
 - **Starts itself.** When the Pi gets power, Narly starts without a keyboard, a screen, or anyone
   logging in. He's waiting for a coin once the start-up cue has played.
-- **Comes back by himself.** If Narly crashes, he restarts on his own. How quickly doesn't matter, only that he comes back. If he keeps
-  crashing (for example, because the `.env` is missing), he stops retrying rather than looping
-  forever, and the log says why.
+- **Comes back by himself.** If Narly crashes, he restarts on his own. How quickly doesn't matter, only that he comes back. Hardware faults
+  restart him however often they happen. A setup mistake that restarting can't fix (for example,
+  a missing `.env`) stops him at once instead of looping forever, and the log says why. (Changed
+  2026-09-29 from "stops after a retry limit": a limit would also count a flaky cable's restarts
+  and could leave him stopped for the day.)
 - **Finds his hardware by itself.** The Arduino is found without typing a port name. The Pi names
   serial devices differently from the Mac, and today's auto-detect only knows the Mac's names.
   The AM8 is used as the mic without picking a device number. Today Narly uses whatever the
@@ -205,8 +207,8 @@ choices are recorded below so the owner can overrule them.
 3. Starting from a blank SD card and following only `deploy/README.md`, the Pi runs Narly with
    all the hardware attached.
 4. Powering the Pi on starts Narly with no keyboard, screen, or login. A coin produces a ticket.
-5. When Narly crashes on the Pi, he comes back on his own, however long it takes. A persistent fault stops the
-   retries and the log says why.
+5. When Narly crashes on the Pi, he comes back on his own, however long it takes. A setup mistake that
+   restarting can't fix stops him at once, and the log says why.
 6. On the Pi, the Arduino and the AM8 are found without anyone typing a port or device number.
 7. The Arduino connection is opened once per run, so consecutive coins on the Pi each light the
    LEDs and none are lost.
@@ -301,7 +303,7 @@ Scenario: A crash mid-afternoon
 Scenario: A missing .env
   Given the .env file has been removed from the Pi
   When the service starts Narly
-  Then the service stops retrying after its limit
+  Then the service does not restart him
   And the log names the missing file as the reason
 ```
 

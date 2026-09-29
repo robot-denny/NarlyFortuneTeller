@@ -370,3 +370,11 @@ grep '^2026-09-28' narly.log | grep -c 'outcome=no_speech'
 
 These commands only look at `narly.log`. On a busy day, some lines may already have moved to
 `narly.log.1`. To count across all the files at once, use `cat narly.log* | grep -c 'outcome=heard'`.
+
+## The Raspberry Pi and switching computers
+
+- To set up Narly on the Raspberry Pi, and to read and count his log there, see
+  [deploy/README.md](../deploy/README.md). On the Pi the log lives in the system log, read with
+  `journalctl -u narly`, not in a file.
+- To move the booth from the Pi to the laptop or back, see
+  [switching-computers.md](switching-computers.md).

@@ -59,6 +59,14 @@ TIMEOUT_PRINT     = 10      # Max time for printing
 # ---- Audio cues ----
 SFX_START = str(_BASE_DIR / "sfx" / "sfx_magic.mp3")      # Plays when mic is ready
 SFX_END   = str(_BASE_DIR / "sfx" / "sfx_generate.mp3")   # Plays when AI starts generating
+SFX_READY = str(_BASE_DIR / "sfx" / "sfx_start.mp3")      # Plays once hardware mode is ready for coins
+
+# Exit code for a setup mistake that retrying can't fix, such as a missing
+# OPENAI_API_KEY. 78 is the standard "configuration error" code. The Pi's
+# service is told never to restart on it (RestartPreventExitStatus=78), so a
+# missing key stops Narly at once with the reason in the log, while hardware
+# faults (exit 1) restart for as long as it takes.
+EXIT_CONFIG = 78
 
 # LED control usually shares the same board/port
 LED_PORT = None  # simulate mode only, set by main(): --port or the detected Arduino; None means no LEDs
@@ -469,6 +477,11 @@ def listen_serial_mode(port: str, dry_run: bool = False):
         ser.close()
         _arduino_disconnected(e)
     log.info("   Ready!")
+    # The ready cue: in a cabinet with no screen, this is how the operator
+    # knows from the booth that Narly has started (or restarted) and is
+    # waiting for a coin. It doesn't wait for the sound to finish.
+    if _audio_out is not None:
+        _audio_out.play(SFX_READY)
 
     first_coin_ignored = False  # Flag to ignore first spurious coin signal
 
@@ -720,7 +733,7 @@ def build_parser():
 
 
 def check_can_start(args, env=os.environ):
-    """Stop with exit code 1 if this run would need OpenAI but has no key.
+    """Stop with exit code 78 (EXIT_CONFIG) if this run would need OpenAI but has no key.
 
     Without the key, every coin would print the "Narly drifted off" slip and
     never say why. An --offline run uses a stand-in fortune, so it needs no key.
@@ -735,7 +748,7 @@ def check_can_start(args, env=os.environ):
     if not env.get("OPENAI_API_KEY"):
         log.error("No OPENAI_API_KEY found. Put it in the .env file next to serial_trigger.py "
                   "(copy .env.example to .env and fill it in), or run with --offline.")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG)
 
 
 def choose_mic(env=os.environ):

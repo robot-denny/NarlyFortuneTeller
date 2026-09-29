@@ -1,0 +1,11 @@
+# 99-narly-printer.rules — lets Narly open the thermal printer over USB without root.
+#
+# deploy/setup-pi.sh installs this as /etc/udev/rules.d/99-narly-printer.rules.
+#
+# Why: on Linux a raw USB device belongs to root unless a rule says otherwise. Narly prints
+# over direct USB (python-escpos), not through a print queue, so the service user needs to
+# open the device itself. This rule hands the printer (USB vendor 0485, product 5741, the
+# "Virtual PRN" in .env.example) to the plugdev group, which setup-pi.sh adds the user to.
+# A different printer has different IDs, and this line must change to match.
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="0485", ATTR{idProduct}=="5741", GROUP="plugdev", MODE="0660"

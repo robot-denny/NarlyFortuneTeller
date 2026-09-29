@@ -13,6 +13,7 @@ through `configure_providers` as `main()` does. Printing is a dry run.
 import pytest
 
 import serial_trigger
+from tests.conftest import errors_logged as _errors
 from fakes import FakeAudioOut, FakeFortune, FakeTranscriber
 
 
@@ -89,10 +90,6 @@ def test_two_coins_share_one_connection_and_both_light_the_leds(monkeypatch):
 # code 1 and one ERROR line the operator can read, not a traceback.
 
 
-def _errors(caplog):
-    return [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]
-
-
 class UnpluggedArduino(FakeArduino):
     """Reads like an Arduino whose USB cable is pulled: pyserial raises
     SerialException from `readline()`."""
@@ -145,3 +142,29 @@ def test_ctrl_c_still_exits_quietly(monkeypatch, caplog):
     serial_trigger.listen_serial_mode("/dev/fake-arduino", dry_run=True)  # no SystemExit
 
     assert _errors(caplog) == []
+
+
+# ---- The ready cue ----
+#
+# Narly lives in a cabinet with no screen. The ready cue is how the operator
+# knows, from the booth, that he has started (or restarted) and is waiting for
+# a coin.
+
+
+def test_the_ready_cue_plays_once_before_any_coin(monkeypatch):
+    FakeArduino.opened = []
+    monkeypatch.setattr(serial_trigger.serial, "Serial", FakeArduino)
+    monkeypatch.setattr(serial_trigger.time, "sleep", lambda s: None)
+    speaker = FakeAudioOut()
+    serial_trigger.configure_providers(
+        get_audio=lambda on_ready: AUDIO,
+        transcribe=FakeTranscriber("Will I find treasure today?"),
+        fortune=FakeFortune(),
+        audio_out=speaker,
+    )
+
+    serial_trigger.listen_serial_mode("/dev/fake-arduino", dry_run=True)
+
+    played = [path for path, wait in speaker.played]
+    assert played[0] == serial_trigger.SFX_READY
+    assert played.count(serial_trigger.SFX_READY) == 1
