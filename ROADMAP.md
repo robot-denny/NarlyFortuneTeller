@@ -28,6 +28,14 @@ confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/li
 
 **Increment 3 — Pi port.** Critical path to the next event.
 
+- **Status 2026-09-29: in progress on `feature/pi-port`, and the Pi goes to the event.** The Pi
+  scored **90%** on the 20-question session (quiet 100%, conversation 80%), with the Bose playing,
+  against the laptop's 95% without it. Coin to ticket: 7.7 s median, against the laptop's 7.6 s.
+  It clears the 17-of-20 rule set before the session. Results in `docs/capture-baseline.md`, and
+  bring-up notes in `_work/pi-port/notes/pi-bringup.md`. Still open: the log doesn't survive a
+  power cut yet (item 9), the laptop proof and switch-back drill (Step 9), and removing
+  `first_coin_ignored`.
+
 - Persistent, size-capped journald — *not* volatile; post-event review needs the logs to
   survive a power cut. V3 `3a`.
 - systemd unit with `Restart=always`. Replaces the V2 `3b` watchdog. V3 `3b`.

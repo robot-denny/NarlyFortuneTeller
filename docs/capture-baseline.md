@@ -320,3 +320,56 @@ end cut-offs fell to one (id 26). The four first-word losses went too, for a rea
 understood. No question hit the 8-second cap, so holding the level didn't make Narly wait on the
 crowd noise. One run each, one voice, and the second time through the same questions, so treat
 the size of the jump with some care.
+
+### 2026-09-29, home office, the Raspberry Pi 4, with the Bose
+
+The same 20 questions and crowd-noise track, run on the Pi 4 (`feature/pi-port`) instead of the
+laptop. This is the go/no-go session in `_work/pi-port/spec.md`.
+
+**Setup and conditions:** AM8 on its stand, opened by name as `fifine_mic` at 16,000 Hz.
+**The Bose on the Pi's headphone jack by AUX cable, as at the event.** The laptop entries above
+had no Bose. Persona `umbraco-2026`. The session was dry-run, like the laptop's.
+
+- Anything unusual: from about question 7, LED commands stalled for 15–20 s (a simulate-mode bug,
+  fixed in `fb5569e`). The session was restarted and carried on from the next id. After the
+  restart the LEDs were off: something else still held the Arduino port. The capture scores
+  don't depend on the LEDs.
+
+**Live**
+
+- Heard correctly overall: 90% (18 of 20)
+- quiet: 100% (10 of 10)
+- conversation: 80% (8 of 10)
+- Unreachable (recognizer_error, left out of the shares): 0
+- Hit the 8-second cap: 0
+- Misses by kind: misheard 2
+
+| id | kind | asked | heard |
+| --- | --- | --- | --- |
+| 27 | misheard | What does the ocean hold for me? | the ocean hold for me |
+| 30 | misheard | Is good luck coming my way? | Rock coming my way |
+
+**Replay**
+
+The Pi's own clips, replayed on the Pi. Identical to live: 90% (18 of 20), quiet 100%,
+conversation 80%, the same two misses.
+
+**Coin to ticket** (`💰 [COIN EVENT]` to `✓ Fortune cycle complete`):
+
+| | Median | Longest | Questions |
+| --- | --- | --- | --- |
+| Laptop, 2026-09-28 (wake level held) | 7.6 s | 10.2 s | 20 |
+| Pi, 2026-09-29 | 7.7 s | 10.2 s | 18 (the two slowed by the LED bug, 26.2 s and 37.5 s, left out) |
+
+Twelve of the Pi's 18 ran without LEDs after the restart, which saves a little time per question.
+The six before the stall, with LEDs, ran 7.3–9.3 s.
+
+**Against the laptop:** 95% → 90% overall, quiet 100% → 100%, conversation 90% → 80%. One more
+miss, both in the crowd-noise block. One lost its first words (27), one was misheard (30: "good
+luck" as "Rock"). The Bose was playing this time and not on the laptop, so some of the gap may be
+the speaker, not the Pi. One run each.
+
+**Decision: the Pi goes to the event.** The rule, written before the session: at least 17 of 20,
+no crashes, and coin-to-ticket no more than a few seconds longer than the laptop. 18 of 20. No
+crashes (the stall was the LED bug, not a crash). Median time 7.7 s against 7.6 s. The laptop
+stays the fallback, per `docs/switching-computers.md`.
