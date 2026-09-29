@@ -11,12 +11,12 @@ per ticket to the `OUT` file. Set `CATS` to re-run only some categories (for exa
 call.
 
 ```sh
-CATS="" OUT=_work/umbraco-2026-persona/notes/run-1.txt \
+CATS="" OUT=_work/shipped/umbraco-2026-persona/notes/run-1.txt \
 OPENAI_MODEL=gpt-4.1-mini .venv/bin/python - <<'PY'
 import csv, os, subprocess
 cats = os.environ.get("CATS", "").split()
-out = os.environ.get("OUT", "_work/umbraco-2026-persona/notes/run-1.txt")
-with open("_work/umbraco-2026-persona/assets/question-set.csv", newline="") as f, open(out, "w") as log:
+out = os.environ.get("OUT", "_work/shipped/umbraco-2026-persona/notes/run-1.txt")
+with open("_work/shipped/umbraco-2026-persona/assets/question-set.csv", newline="") as f, open(out, "w") as log:
     for row in csv.DictReader(f):
         if cats and row["category"] not in cats:
             continue

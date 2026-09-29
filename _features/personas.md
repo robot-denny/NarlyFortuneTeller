@@ -6,14 +6,14 @@ his fortunes answer an attendee's question. The operator picks one when Narly st
 Festival in Chicago, gives a clear, opinionated verdict on the question actually asked. He is
 openly proud of Umbraco, and he brings in his quirks only when a question invites them.
 
-**Source**: `_work/umbraco-2026-persona/spec.md`
+**Source**: `_work/shipped/umbraco-2026-persona/spec.md`
 **Last verified**: 2026-09-29
 
 ---
 
 ## Increments
 
-- [x] 2026-09-29 — Umbraco 2026 persona (`_work/umbraco-2026-persona/spec.md`)
+- [x] 2026-09-29 — Umbraco 2026 persona (`_work/shipped/umbraco-2026-persona/spec.md`)
 - [ ] Backfill the `default`, `music` and `umbraco-2025` voices from their prompts (no spec yet)
 - [ ] Try Claude (Haiku 4.5) as the fortune provider (no spec yet)
 - [ ] Spell "Umbraco" right at the recognizer with a vocabulary hint (roadmap Increment 4, no
@@ -398,7 +398,7 @@ Scenario: A fortune with a question echo
 ### Checked by reading, not by a test
 
 Nothing can assert a model's wording, so the fortune scenarios are checked by reading tickets. The
-latest reading is round 4 of `_work/umbraco-2026-persona/notes/reading.md` (2026-09-29,
+latest reading is round 4 of `_work/shipped/umbraco-2026-persona/notes/reading.md` (2026-09-29,
 `gpt-4.1-mini`, one ticket per question, raw output in `run-6-round4.txt`). A reading is evidence,
 not a proof: each question was asked once, and the model can answer differently next time. That's
 why these rows stay `Not covered`. Whether to mark them `Ruled out` is the project's decision to

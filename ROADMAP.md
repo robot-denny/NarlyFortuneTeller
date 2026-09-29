@@ -24,16 +24,6 @@ confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/li
   measured the same evening with the same 20: **95%** (quiet 100%, conversation 90%), one end
   cut-off left. Results in `docs/capture-baseline.md`.
 
-**Umbraco 2026 persona.** `umbraco-2026` for the Umbraco 2026 US Festival in Chicago (from
-2026-09-30), on `gpt-4.1-mini`. Spec: `_work/umbraco-2026-persona/spec.md`.
-
-- Prompt written and tuned over four rounds against a 63-question set: 0/20 hedges on decision
-  questions, 0/10 stray quirks, serious questions handled, no measurable latency from the longer
-  prompt (1.00 s vs 1.00 s average). Results in `_work/umbraco-2026-persona/notes/reading.md`.
-- Accepted: a few tickets run 31–32 words (within the printer's limit); one misheard question
-  (#51) says "no" to the rival it thinks it heard before steering to Umbraco.
-- Left: the owner sets `OPENAI_MODEL=gpt-4.1-mini` in `.env`, then one full hardware fortune.
-
 ## Next
 
 **Increment 3 — Pi port.** Critical path to the next event.
@@ -83,6 +73,13 @@ the move to `gpt-4.1-mini`; the owner accepts the extra seconds that model adds.
 
 ## Recently shipped
 
+- **Umbraco 2026 persona** (2026-09-29, `_work/shipped/umbraco-2026-persona/`). `umbraco-2026`
+  for the Umbraco 2026 US Festival in Chicago, on `gpt-4.1-mini`. Clear verdicts on decision
+  questions, deflection by intent, fond competitor teasing, quirks only when invited, and a
+  reviewed almanac. Tuned over four rounds against a 63-question set: 0/20 hedges, 0/10 stray
+  quirks, no measurable latency from the longer prompt. A booth hardware run heard "embraco" and
+  printed "Umbraco". Accepted: a few tickets run 31–32 words; misheard "umbrella co" may get a
+  "no" before steering to Umbraco. Behavior is in `_features/personas.md`.
 - **Increment 1 — Measure and fix attendee capture** (2026-09-28,
   `_work/shipped/capture-measure-and-fix/`). Every fortune logs what was heard, or which of five
   failures struck, and whether the question was substituted (V2 `3a`). A full fortune runs with
