@@ -5,7 +5,7 @@ Step 1 of `_work/pi-port/plan.md`.
 - **Tag**: `laptop-known-good-2026-09-28` (annotated)
 - **Commit**: `c8bb755` (`c8bb755307580b015e53bebbb3040122dff3fbcd`), the `main` head that scored 95% on 2026-09-28
 - **Message**: "Known-good laptop build: 95% baseline, before the Pi port"
-- **Pushed to `origin`**: pending. The push waits for the owner to confirm.
+- **Pushed to `origin`**: yes, 2026-09-28. `git ls-remote --tags origin laptop-known-good-2026-09-28` shows it.
 
 ## Going back to it on the laptop
 
