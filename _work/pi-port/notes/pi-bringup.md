@@ -235,3 +235,17 @@ whether the re-check passed.
   the Pi with `sudo alsactl store`. A small click heard at the end of a hand-played
   `sfx_generate.mp3` was the test command cutting it off at 5 s (`sfx stuck`), not Narly, who
   plays that cue without waiting.
+- **Item 1 / capture: every question came back `not_understood`.** Three coins, each ran to the
+  8 s limit (`secs=8.4`, `8.4`, `7.6`) with no words found. `arecord -D plughw:3,0 …` recorded
+  clearly, but a recording made the way Narly opens the mic (`sr.Microphone(device_index=1)`,
+  `fifine Microphone: USB Audio (hw:3,0)`, `rate 44100`) played back **garbled**. Cause: the raw
+  `hw:` device, with nothing converting the rate. **Fix:** `deploy/asound.conf` adds `fifine_mic`
+  (plug to `hw:Microphone`), and `pick_mic_index` prefers a match without `(hw:` (tested). Re-check:
+  pending.
+- **Item 6 evidence: the first coin is a real one on the Pi too.** `Ready!` at 10:13:22, then
+  nothing until the owner's coin at 10:14:05, which was dropped as `Ignoring first coin signal`.
+  The same happened at 10:27:35. No spurious start-up coin was seen on either machine, so the
+  workaround only swallows attendees' coins. It should be removed in its own change, with a test.
+- **Noise, not a fault:** each time the mic opens, the log fills with `ALSA lib … Unknown PCM …`
+  and `jack server is not running` lines. That is the mic library probing every device. Worth
+  hiding later. It doesn't affect anything.

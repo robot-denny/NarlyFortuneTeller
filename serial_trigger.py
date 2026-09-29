@@ -200,13 +200,22 @@ def pick_mic_index(names, wanted):
     Returns the device number of the first name that contains `wanted`, or
     None when nothing matches or `wanted` is empty. None means "use the
     computer's default input", which is what Narly did before.
+
+    On the Pi, the same mic is listed twice: as a raw device, whose name ends
+    "(hw:3,0)", and as "fifine_mic" from deploy/asound.conf, which goes through
+    ALSA's converter. Opened raw, the mic recorded garbled audio (Narly asks for
+    44,100 Hz and nothing converts it), so a match without "(hw:" in its name is
+    preferred. The Mac's names never contain "(hw:", so this changes nothing there.
     """
     if not wanted:
         return None
     wanted = wanted.lower()
-    for index, name in enumerate(names):
-        if wanted in name.lower():
+    matches = [index for index, name in enumerate(names) if wanted in name.lower()]
+    for index in matches:
+        if "(hw:" not in names[index]:
             return index
+    if matches:
+        return matches[0]
     return None
 
 def mic_get_audio(on_ready, recognizer=None, mic=None):

@@ -74,3 +74,20 @@ def test_mic_name_in_env_overrides_the_default(monkeypatch):
     monkeypatch.setattr(serial_trigger.sr.Microphone, "list_microphone_names",
                         staticmethod(lambda: LAPTOP_NAMES))
     assert serial_trigger.choose_mic(env={"MIC_NAME": "MacBook Pro Microphone"}) == 2
+
+
+# The names the Pi listed on 2026-09-29. Opened directly, the raw "(hw:3,0)" device
+# recorded garbled audio: Narly asked it for 44,100 Hz with nothing converting in
+# between. deploy/asound.conf adds "fifine_mic", which goes through ALSA's converter,
+# so Narly must prefer it when both match.
+PI_NAMES_WITH_PLUG = ["bcm2835 Headphones: - (hw:0,0)", "fifine Microphone: USB Audio (hw:3,0)",
+                      "sysdefault", "fifine_mic", "default"]
+
+
+def test_on_the_pi_the_converting_mic_is_preferred_over_the_raw_device():
+    assert serial_trigger.pick_mic_index(PI_NAMES_WITH_PLUG, "fifine") == 3
+
+
+def test_the_raw_device_is_still_used_when_it_is_the_only_match():
+    names = ["bcm2835 Headphones: - (hw:0,0)", "fifine Microphone: USB Audio (hw:3,0)", "default"]
+    assert serial_trigger.pick_mic_index(names, "fifine") == 1
