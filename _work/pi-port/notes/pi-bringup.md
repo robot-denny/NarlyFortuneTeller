@@ -28,6 +28,8 @@ All **on the Pi**, from `~/fortune-service`.
   `____`
 - Python version, from `python3 --version` (should be 3.11):
   `____`
+- Persona, from `journalctl -u narly -b | grep 'Persona:'` (should be `umbraco-2026`):
+  `____`
 - Arduino port, from the start-up log line `Arduino port: …`
   (`journalctl -u narly -b | grep 'Arduino port:'`):
   `____`
@@ -72,7 +74,7 @@ All **on the Pi**, from `~/fortune-service`.
 
   ```bash
   sudo systemctl stop narly
-  .venv/bin/python serial_trigger.py --mode simulate --offline --question "Will I find treasure today?"
+  .venv/bin/python serial_trigger.py --mode simulate --offline --persona umbraco-2026 --question "Will I find treasure today?"
   ```
 
   Press **Enter** for the coin. You should hear the chime, then the thinking sound, from the Bose.

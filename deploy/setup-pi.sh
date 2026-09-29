@@ -9,14 +9,16 @@
 # How to run it (as your normal login user, NOT with sudo in front):
 #
 #     cd ~/fortune-service
-#     bash deploy/setup-pi.sh            # uses the "default" persona
-#     bash deploy/setup-pi.sh music      # or name a persona from personas/
+#     bash deploy/setup-pi.sh umbraco-2026   # first time: name the persona
+#     bash deploy/setup-pi.sh                # later runs: keeps the persona already installed
 #
 # The script asks for your password when it needs sudo for a system step. Your own files
 # (the repo and .venv) stay owned by you.
 #
-# It is safe to run again. Re-run it to change the persona, or after pulling new code that
-# changes requirements.txt or anything under deploy/. It never starts or restarts Narly itself.
+# It is safe to run again. Re-run it with a new name to change the persona, or with no name after
+# pulling new code that changes requirements.txt or anything under deploy/: then it keeps the
+# persona that is already installed. (Only the very first run, with no name, uses "default".)
+# It never starts or restarts Narly itself.
 #
 # What it does, in order:
 #   1. Installs the system packages Narly needs (apt).
@@ -51,7 +53,20 @@ fi
 # Find the repo from where this script lives (deploy/..), so it works from any folder.
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_USER="$(id -un)"
-PERSONA="${1:-default}"
+INSTALLED_UNIT=/etc/systemd/system/narly.service
+
+# Which persona: the one named on the command line; otherwise the one already installed, so a
+# re-run after `git pull` can't quietly switch the booth back to "default"; otherwise "default".
+if [[ $# -ge 1 ]]; then
+    PERSONA="$1"
+elif [[ -f "$INSTALLED_UNIT" ]] \
+        && PERSONA="$(sed -n 's/^ExecStart=.*--persona \([A-Za-z0-9_-]*\).*/\1/p' "$INSTALLED_UNIT" | head -n 1)" \
+        && [[ -n "$PERSONA" ]]; then
+    say "No persona named, so keeping the one already installed: '$PERSONA'"
+else
+    PERSONA="default"
+    warn "No persona named, so using 'default'. For the event, run: bash deploy/setup-pi.sh umbraco-2026"
+fi
 
 # systemd splits the start command on spaces, so the repo path must not contain any.
 if [[ "$REPO_DIR" =~ [[:space:]] ]]; then

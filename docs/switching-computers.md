@@ -109,8 +109,11 @@ The LED strip stays on its own 5 V supply. Nothing about it changes.
 **On the laptop**, on `main`:
 
 ```bash
-.venv/bin/python serial_trigger.py --log-file clips/narly.log
+.venv/bin/python serial_trigger.py --persona umbraco-2026 --log-file clips/narly.log
 ```
+
+`--persona umbraco-2026` is the event persona. Without it, Narly uses `default`. The log should
+show `Persona: umbraco-2026`.
 
 Narly finds the Arduino by himself in either USB-C port, so there's no `--port`. The log goes in
 `clips/`, which git ignores, so it never shows up as a new file in `git status`.
@@ -181,7 +184,8 @@ Whichever machine is running Narly:
 
 ## On the known-good tag
 
-The tag is the older version, from before the Pi work. Three things differ:
+The tag is the older version, from before the Pi work. Three things differ, and it's missing the
+event persona (see the end of this section):
 
 1. **It doesn't find the Arduino by itself.** You have to tell it the port. **On the laptop**:
 
@@ -193,7 +197,7 @@ The tag is the older version, from before the Pi work. Three things differ:
    Arduino is plugged into. Put it after `--port`:
 
    ```bash
-   .venv/bin/python serial_trigger.py --port /dev/cu.usbmodem1101 --log-file clips/narly.log
+   .venv/bin/python serial_trigger.py --port /dev/cu.usbmodem1101 --persona umbraco-2026 --log-file clips/narly.log
    ```
 2. **It listens on the Mac's default input.** Before starting, open **System Settings → Sound →
    Input** and choose the AM8. There's no `Microphone:` line in the log to check it.
@@ -202,4 +206,21 @@ The tag is the older version, from before the Pi work. Three things differ:
 
 Everything else, including the test coin and the first-coin rule, is the same.
 
-To go back to `main` later: `git switch main`.
+**The tag doesn't include the `umbraco-2026` persona**, because the persona was written after it.
+Copy the persona's folder in from `main` before starting. **On the laptop**, right after switching
+to the tag:
+
+```bash
+git fetch origin
+git restore --source=origin/main -- personas/umbraco-2026
+```
+
+`git status` then lists `personas/umbraco-2026/` as a new folder. That's expected. (Tested
+2026-09-29: the tag runs this persona as it is.)
+
+To go back to `main` later, remove that copied folder first, or `git switch` refuses:
+
+```bash
+rm -rf personas/umbraco-2026
+git switch main
+```

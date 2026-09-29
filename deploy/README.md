@@ -205,13 +205,14 @@ The setup script installs everything Narly needs and tells the Pi to start him o
 **On the Pi:**
 
 ```bash
-bash deploy/setup-pi.sh
+bash deploy/setup-pi.sh umbraco-2026
 ```
 
-That uses the `default` persona. To use another, name it at the end, for example
-`bash deploy/setup-pi.sh umbraco-2025`. `.venv/bin/python serial_trigger.py --list-personas` lists
-them, but only after this script has made `.venv`. The folder names under `personas/` are the same
-list.
+`umbraco-2026` is the persona for the event. The script puts it into the service, so every time
+the Pi starts, Narly starts as that persona. **You only name it this first time.** When you run
+the script again later (after `git pull`, say) with no name, it keeps the persona that's already
+installed and says so. Name a different one only to change it (see
+[Changing persona](#changing-persona)). The folder names under `personas/` are the full list.
 
 A few things to know:
 
@@ -317,13 +318,13 @@ speaker, and the LEDs. You type the question, so the microphone isn't used.
 
 ```bash
 sudo systemctl stop narly
-.venv/bin/python serial_trigger.py --mode simulate --offline --question "Will I find treasure today?"
+.venv/bin/python serial_trigger.py --mode simulate --offline --persona umbraco-2026 --question "Will I find treasure today?"
 ```
 
 You should see these lines, among others:
 
 ```
-Persona: default
+Persona: umbraco-2026
 Offline: speech-to-text and fortune are stand-ins; no network calls will be made
 LED port: /dev/ttyACM0
    LEDs ready
@@ -365,7 +366,7 @@ If there's no sound, see [No sound](#no-sound). If the printer says `Resource bu
    should see:
 
    ```
-   Persona: default
+   Persona: umbraco-2026
    Microphone: … (device …)
    Arduino port: /dev/ttyACM0
    🔌 Hardware mode: Listening on /dev/ttyACM0 @ 115200...
@@ -458,7 +459,7 @@ that page first for the script, the conditions, and the setup checklist. Two dif
 3. Start the session:
 
    ```bash
-   .venv/bin/python serial_trigger.py --mode simulate --dry-run --save-clips clips/pi --log-file clips/pi/session.log
+   .venv/bin/python serial_trigger.py --mode simulate --dry-run --persona umbraco-2026 --save-clips clips/pi --log-file clips/pi/session.log
    ```
 
    Near the top, check the line `Microphone: … (device …)` mentions `fifine`. If it says
@@ -502,15 +503,16 @@ the last 15 seconds before a power cut can be lost.
 
 ### Changing persona
 
-The persona is set when the setup script runs. To change it, run the script again with the new
-name, then restart Narly. **On the Pi:**
+The persona is set when the setup script runs. The event persona is `umbraco-2026`. To change
+it, run the script again with the new name, then restart Narly. **On the Pi**, for example:
 
 ```bash
-bash deploy/setup-pi.sh music
+bash deploy/setup-pi.sh umbraco-2026
 sudo systemctl restart narly
 ```
 
-Then `journalctl -u narly -f` should show `Persona: music`.
+Then `journalctl -u narly -f` should show `Persona: umbraco-2026`. To check which persona is
+installed without restarting: `grep -- --persona /etc/systemd/system/narly.service`.
 
 ### Updating the code
 
@@ -523,7 +525,8 @@ sudo systemctl restart narly
 ```
 
 `git pull` lists the files that changed. If that list includes `requirements.txt` or anything under
-`deploy/`, run `bash deploy/setup-pi.sh` (with your persona) before the restart.
+`deploy/`, run `bash deploy/setup-pi.sh` before the restart. With no name, it keeps the installed
+persona.
 
 ### Checking for low power
 

@@ -100,8 +100,11 @@ direct USB. `configure_providers` and `fakes.py` let the coin flow run in tests 
   Wi-Fi joins. If the network still isn't up at the first coin, that coin gets the usual fallback
   slip.
 - **The persona is fixed when the setup script runs.** `deploy/setup-pi.sh [persona]` writes it
-  into the installed unit, defaulting to `default`. Changing it means re-running the script, which
-  is safe to repeat.
+  into the installed unit. **The event persona is `umbraco-2026`** (merged from `main` on
+  2026-09-29, with `OPENAI_MODEL=gpt-4.1-mini`). A re-run with no name keeps the persona already
+  installed, so a re-run after `git pull` can't reset the booth to `default`. The laptop runbook
+  passes `--persona umbraco-2026`. The known-good tag predates the persona, and runs it once
+  `personas/umbraco-2026` is restored from `origin/main` (tested 2026-09-29).
 - **Networks: home Wi-Fi from the Imager, and the phone hotspot added over SSH.** The event network
   is added at the booth. Bookworm uses NetworkManager, so `nmcli connection add ...` stores a
   network that's out of range. The Pi is reached as `narly.local`, hostname `narly`, set in the
