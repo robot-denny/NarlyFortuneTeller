@@ -85,6 +85,18 @@ score as a miss. This rule is only for the session. Attendees can say anything.
 **If a volunteer goes off script**, type the same id again at the next prompt and ask again. Only
 the last try counts.
 
+### Running it alone: the 20-question session
+
+With no volunteers, run a shorter session yourself: ids **1 to 10** in quiet, then ids **21 to 30**
+with the crowd noise playing. Skip the leaning block. Type each id as usual. The scoring counts
+only the questions you asked, and the replay's `No clip:` line lists the other 40, which is
+expected. Use ids 21 to 30 for the noise block, not 11 to 20: the script marks each id's condition,
+so 11 to 20 would be scored as quiet.
+
+Judge the chime yourself from the attendee's spot. In the results entry, write "solo, owner's
+voice" under **Anything unusual**. You know the questions, so the score runs higher than
+strangers would get. It still compares fairly with a later solo session, such as one on the Pi.
+
 ### The three conditions
 
 - **Quiet (ids 1 to 20).** No crowd noise. The volunteer stands where an attendee would.

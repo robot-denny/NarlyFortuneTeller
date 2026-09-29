@@ -6,17 +6,23 @@ experience. `docs/v2-upgrade-plan.md` and the V3 plan remain the detailed refere
 and V3 item IDs are kept below so those documents stay navigable.
 
 Priority order: hear attendees reliably → Pi for the next event → refine → sensors.
-Target for the first two: **≥ 60% of attendees heard correctly** in a room with background
-conversation, measured rather than felt, on the Pi.
+The aim is **visible improvement, measured rather than felt**, from one run to the next. The
+long-run mark is ≥ 60% of attendees heard correctly in a room with background conversation, but
+hitting it is not the goal of any one increment.
 
 ## Now
 
-**Increment 2 — Live baseline.** When the directional mic arrives and the Arduino is rewired.
-New mic on a stand; record fixture clips (quiet room, conversation behind, leaning in); first
-measured success rate against the log from Increment 1. The Fifine AM8 is the chosen mic; the
-Samson Q20 is out of scope. Lean on purpose: a baseline and a repeatable replay set to track each
-iteration against, not a push to hit 60% before the event (Wednesday 2026-09-30). Spec:
-`_work/live-baseline/spec.md`.
+**Increment 2 — Live baseline.** Tools shipped (PR #2): clip saving, live and replay scoring,
+the runbook `docs/capture-baseline.md`, and the 60-question script. Full hardware run on the Mac
+confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/live-baseline/spec.md`.
+
+- Remaining: one measuring session, scaled down on 2026-09-28 to what the owner can run alone
+  before the event: 20 questions, ids 1–10 quiet and 21–30 with crowd noise, on the laptop with
+  the AM8. No leaning block. Fixed setup, noted once. Results go in the runbook's results section,
+  marked "solo, owner's voice".
+- Held until that score is in: the one-line threshold fix for mid-sentence cut-offs
+  (`dynamic_energy_threshold = False` after calibration). A replay can't test it, because the
+  clips already stop where Narly stopped listening; it needs a second live run of the same 20.
 
 ## Next
 
@@ -31,8 +37,9 @@ iteration against, not a push to hit 60% before the event (Wednesday 2026-09-30)
 - Stable device names by VID/PID and udev; audio devices by name. V3 `3d`.
 - `deploy/` — setup script, unit file, journald drop-in, README. V2 `3f` / V3 `3e`.
 - Power budget: official 3 A supply; mic, Arduino, and printer share the USB bus. V3 `3f`.
-- Re-run Increment 2's replay set on the Pi, so the Pi's own audio path gets a score. The laptop
-  baseline doesn't carry over.
+- Re-run Increment 2's 20-question session on the Pi, live, with the same setup, and replay the
+  laptop clips there. The laptop score is the comparison. If the Pi scores worse and can't be
+  fixed easily before an event, that event runs on the laptop.
 
 **Increment 4 — Endpointing and recognition.** Measured against the Increment 2 fixtures.
 
