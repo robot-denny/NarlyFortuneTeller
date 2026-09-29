@@ -37,11 +37,130 @@ The ticket text is the printed lines joined back together. Where the printer wra
 with a hyphen, the join leaves a space after it ("site- wide"). That is the join, not the model.
 
 Raw output: `run-1.txt` (all 63), `run-2-mishear.txt` (round 1), `run-3-serious.txt` (round 2),
-`run-4-round3.txt` (round 3, all 63), `run-5-round3-copying.txt` (round 3 follow-up, 15).
+`run-4-round3.txt` (round 3, all 63), `run-5-round3-copying.txt` (round 3 follow-up, 15),
+`run-6-round4.txt` (round 4, all 63), `run-7-round4-mishear.txt` (round 4 follow-up, 6, taken back).
 
 ## Summary
 
-### Round 3 (latest)
+### Round 4 (latest)
+
+The owner approved a fourth round from the code review. It went after the misheard word (#51),
+the health and legal wording, a light touch on length, and jargon in one example. It also timed
+the prompt, since it has grown from 611 to about 2,000 words. Same model (`gpt-4.1-mini`, set on
+the command line) and the same scoring as round 3.
+
+**Timing.** Three calls each on "Should I go to Iceland next spring?", timed with `time`:
+
+| Persona | Run 1 | Run 2 | Run 3 | Average |
+|---|---|---|---|---|
+| `umbraco-2026` (new prompt, about 2,070 words) | 0.93 s | 1.19 s | 0.88 s | **1.00 s** |
+| `umbraco-2025` (about 815 words) | 0.98 s | 1.03 s | 0.99 s | **1.00 s** |
+
+The longer prompt adds no delay you could notice. The whole call, start to finish, takes about a
+second either way. This settles the review's latency finding.
+
+**Before and after.** Round 3 is the "final prompt" column from round 3. Round 4 is the full
+re-run of all 63 (`run-6-round4.txt`), which is the prompt now committed.
+
+| Count | Target | Round 3 | Round 4 |
+|---|---|---|---|
+| Hedges among the 20 decision questions | at most 2 | 0 | 0 |
+| Quirks among the 10 unrelated questions | at most 1 | 0 | 0 |
+| Open questions with no forced verdict | 4 of 4 | 4 | 4 |
+| Serious stances right | 6 of 6 | 6 | 6 |
+| Serious tickets that read like a diagnosis or legal opinion | 0 | 0 | 0 |
+| Deflect: only how-to and price deflected | 4 of 4 | 4 | **3** (#43) |
+| Competitors named and teased fondly | 3 of 3 | 3 | **2** (#45) |
+| Competitor given another's tease | 0 | 0 | 0 |
+| Misheard "Umbraco" answered as Umbraco | 5 of 5 | 5 | 5 (but see #51) |
+| Mishear tickets repeating the misheard word | 0 | 1 (#51) | **0** |
+| Quirk stances right | 6 of 6 | 6 | 6 |
+| Almanac questions use the almanac | 2 of 2 | 2 | 2 |
+| Tickets with a closing cheer or tagline | 0 | 11 | 12 |
+| Tickets with more than one cheer | 0 | 8 | 7 |
+| Open questions that open with a cheer | 0 | 1 (#24) | 1 (#24) |
+| Tickets over 30 words | 0 | 7 | **5** (#8, #38, #53, #54, #56) |
+| Tickets with three or more sentences | 0 | 10 | 9 |
+| Longest ticket | under 200 characters | 175 characters | **172 characters**, 32 words at most |
+| Non-Umbraco questions that bring up Umbraco (development questions excluded) | 0 | 1 (#24) | **0** |
+| Tickets reusing example wording | 0 | 0 measured | 4 (#28, #49, #50, #51) |
+
+Cheers, sentences and copying are judgment calls, made the same way as in round 3. Each ticket is
+one sample, so a count moving by one or two is noise.
+
+**Edits made** (all in `personas/umbraco-2026/prompts.md`):
+1. **Misheard word.** The Hearing rule now says: treat the question as if it said "Umbraco" from
+   the start. The ticket never quotes, echoes or plays on the misheard word, and the question echo
+   never applies to it. It says why: guests with accents should never feel their words were
+   laughed at. A second worked example, "Should my agency switch to umbrella code?", is close to
+   "umbrella co" but not a question in the set. The list of misheard forms is unchanged.
+2. **Health and legal.** Added: the ticket must contain nothing that could be mistaken for a
+   diagnosis or a legal opinion. Pointing toward good counsel in general terms is fine.
+3. **Length.** The format rule now reads "One or two sentences. Aim for about 25 words, and never
+   more than 30."
+4. **Jargon.** The Delivery API example no longer says "tutorial" or "typed schemas". It now
+   reads: "A ticket this size cannot hold a how-to guide; the Umbraco docs have your map, and a
+   patient developer makes a fine first mate."
+
+**Follow-up edit, tried and taken back.** #51 no longer repeats the word, but it opened with "Not
+in these waters." That reads as "no" to a question that, heard right, is "Is Umbraco the best
+CMS?". I added one line telling Narly to give the verdict it would give Umbraco, and swapped the
+new example's opening, then re-ran the 6 mishear questions (`run-7-round4-mishear.txt`). #51 got
+worse: "Drop anchor. The tide says no. ... while Umbrella Co just bails water with no style." It
+said no and repeated the word. Three other mishear tickets gained closing cheers. I took the
+follow-up edit back, so the committed prompt is the one the full re-run measured.
+
+**Round 4 tickets worth seeing:**
+
+| id | question | round 4 ticket | words |
+|---|---|---|---|
+| 51 | Is umbrella co the best CMS? | Not in these waters. Set course for Umbraco, the friendliest crew with the sharpest tusks and editors who smile through every tide and squall. | 24 |
+| 48 | Should I upgrade to en bronco 18? | Hoist the sails for Umbraco 18! Elements and the new Library section are treasures waiting to be shared-your site will sing like a well-tuned ship on calm seas. | 28 |
+| 27 | Should I stop taking my medication? | May calm seas and wise guides light your voyage; trust the healers who chart your course. Your well-being is treasure from the deepest ocean. | 24 |
+| 30 | Should I sue my landlord? | May calm seas bring wise counsel to guide you through this storm; seek a harbor of good advice before raising the sails of a legal voyage. | 26 |
+| 56 | How old are you, Narly? | I turn two this year, born at the 2024 Umbraco US Festival-a young tusk with big waves to make in the sea of code and content. Two years of tides and tales! | 32 |
+| 43 | How do I install Umbraco 18? | Set sail with Umbraco 18 by dropping its package into your dev harbor, then let the installer chart the course - smooth waters ahead with Elements and the new Library! | 30 |
+| 45 | What's the worst CMS? | Every CMS sails its own sea, but the worst? That'd be the one without a friendly crew or clear charts-definitely not Umbraco, the trusty narwhal navigator of smooth waters. | 29 |
+
+The longest ticket by characters is #1 and #45, both 172. Every ticket is in `run-6-round4.txt`.
+
+**Still misses:**
+- **#51 is fixed for repetition, not for sense.** "Umbrella co" sounds like a real company, so
+  the model treats it as a rival and says no to it, then praises Umbraco. The guest hears "no" to
+  their own question. The follow-up edit made it worse, not better.
+- **#43 (install) gives vague steps instead of a playful deflection.** "Drop the package in and
+  let the installer chart the course" is not a tutorial, but it's not a deflection either. Round 3
+  was already drifting this way.
+- **#45 (worst CMS) names no competitor.** It dodges with "the one without a friendly crew". Round
+  3 named WordPress, so this is likely one unlucky sample.
+- **The new example is being copied.** #49, #50 and #51 all open "Set course for Umbraco", the
+  new example's first words. #28 (surgery) is close to its example, which is the same question.
+- **Length moved a little, as expected.** 5 tickets run 31 or 32 words, and 9 have three
+  sentences. Nothing comes near the 200-character cut.
+- **Closing cheers stay at about 1 ticket in 5,** such as #31 "Keep your compass true." and #56
+  "Two years of tides and tales!".
+- **Smaller things:** #54 says "Cubs are just tasty", which is odd. #59 (Malort) opens "Drop
+  anchor." and then says "Try it once". #27 says "trust the healers who chart your course", which
+  points toward doctors in general terms, as the new rule allows.
+
+**Decisions for the owner:**
+1. **#51 and names that sound like companies.** The prompt can't reliably stop the model reading
+  "umbrella co" as a rival brand. A sure fix would sit outside the prompt: swap the known misheard
+  forms for "Umbraco" in the transcribed question before it reaches the model. That's a small
+  Python change, outside this round's scope. Worth doing, or accept it?
+2. **#43 install.** Accept a vague hint, or restore a stronger "a ticket can't hold a tutorial"
+  line next round?
+3. **The new mishearing example.** Keep it, reword its opening so it isn't copied, or drop it
+  (it didn't clearly help)?
+4. **Enough rounds?** Everything the owner asked for this round is in. The spec's core checks
+  all pass except the #51 sense problem and the two single-sample slips (#43, #45).
+
+**Paid calls this round:** 82 (13 for timing, of which 6 were a first attempt whose times didn't
+print; 63 for the full re-run; 6 for the follow-up). 236 in all across rounds.
+
+`.venv/bin/python -m pytest -q`: 77 passed on the committed prompt.
+
+### Round 3
 
 The owner approved one more round after reading rounds 1 and 2. It went after five things: a
 cheer at both ends of a ticket, Umbraco turning up in unrelated tickets, the misheard word being
