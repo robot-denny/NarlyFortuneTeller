@@ -10,10 +10,14 @@ def _print_via_escpos(text: str):
     out_ep = int(os.getenv("ESCPOS_OUT_EP", "0"), 16) if os.getenv("ESCPOS_OUT_EP") else None
 
     p = Usb(vendor, product, in_ep=in_ep, out_ep=out_ep, timeout=0)
-    p.set(align="center", width=1, height=1)
-    for line in text.split("\n"):
-        p.text(line + "\n")
-    p.cut()
+    try:
+        p.set(align="center", width=1, height=1)
+        for line in text.split("\n"):
+            p.text(line + "\n")
+        p.cut()
+    finally:
+        # Release the USB interface, or the next ticket gets "Access denied".
+        p.close()
 
 def _print_via_os(text: str):
     """Print via system lpr/CUPS (works with PRINTER env var)."""
