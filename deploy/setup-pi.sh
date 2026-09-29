@@ -25,7 +25,8 @@
 #   4. Installs the printer rule, the sound setting, and the log setting.
 #   5. Installs Narly as a service that starts on power-up (but does not start him now).
 #   6. Turns the headphone jack up to 100%.
-#   7. Checks for .env and prints what to do next.
+#   Then it checks for .env and prints what to do next (the last "==>" line is
+#   "Setup finished. What next:").
 #
 # Full guide: deploy/README.md
 
@@ -143,13 +144,13 @@ else
     (it should list 'Headphones'). Setup carries on; see deploy/README.md."
 fi
 
-# --- 7. Checks and next steps ------------------------------------------------------------
+# --- Last: checks and next steps ---------------------------------------------------------
 env_missing=0
 if [[ ! -f "$REPO_DIR/.env" ]]; then
     env_missing=1
     warn "There is no .env file in $REPO_DIR.
     Narly needs it for the OpenAI key. Do NOT start the service until it is there:
-    without the key he stops at start-up, and after 10 tries systemd gives up."
+    without the key he stops at start-up (exit 78) and is not restarted."
 fi
 
 if systemctl is-active --quiet narly; then

@@ -17,7 +17,8 @@
 #   a minute and leave him stopped for the rest of the day.)
 # - RestartPreventExitStatus=78. A setup mistake that retrying can't fix, such as a missing
 #   OPENAI_API_KEY in .env, makes Narly exit with code 78 instead. He is then NOT restarted: he
-#   stops at once, and the log says why. Fix it, then:  sudo systemctl restart narly
+#   stops at once, and the log says why. Fix it, then:
+#     sudo systemctl reset-failed narly && sudo systemctl start narly
 # - PYTHONUNBUFFERED=1 sends each log line to the journal at once, not in batches, so a power
 #   cut loses as little as possible.
 # - SDL_AUDIODRIVER=alsa makes pygame (the cue sounds) talk to the Pi's sound system directly.
