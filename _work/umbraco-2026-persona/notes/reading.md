@@ -36,9 +36,136 @@ PY
 The ticket text is the printed lines joined back together. Where the printer wrapped a long word
 with a hyphen, the join leaves a space after it ("site- wide"). That is the join, not the model.
 
-Raw output: `run-1.txt` (all 63), `run-2-mishear.txt` (round 1), `run-3-serious.txt` (round 2).
+Raw output: `run-1.txt` (all 63), `run-2-mishear.txt` (round 1), `run-3-serious.txt` (round 2),
+`run-4-round3.txt` (round 3, all 63), `run-5-round3-copying.txt` (round 3 follow-up, 15).
 
 ## Summary
+
+### Round 3 (latest)
+
+The owner approved one more round after reading rounds 1 and 2. It went after five things: a
+cheer at both ends of a ticket, Umbraco turning up in unrelated tickets, the misheard word being
+repeated, examples being copied, and a competitor getting another's tease. Same model
+(`gpt-4.1-mini`, set on the command line) and the same scoring as round 1.
+
+**Before and after.** Round 1 is `run-1.txt`. "Round 3" is the full re-run of all 63
+(`run-4-round3.txt`). "Final prompt" swaps in the 15 tickets re-run after the follow-up edit
+(`run-5-round3-copying.txt`); the other 48 are unchanged from the full re-run.
+
+| Count | Target | Round 1 | Round 3 | Final prompt |
+|---|---|---|---|---|
+| Hedges among the 20 decision questions | at most 2 | 0 | 0 | 0 |
+| Quirks among the 10 unrelated questions | at most 1 | 0 | 0 | 0 |
+| Open questions with no forced verdict | 4 of 4 | 4 | 4 | 4 |
+| Serious stances right | 6 of 6 | 5 (6 after round 2) | 6 | 6 |
+| Deflect: only how-to and price deflected | 4 of 4 | 4 | 4 | 4 |
+| Competitors named and teased fondly | 3 of 3 | 3 | 3 | 3 |
+| Competitor given another's tease | 0 | 1 (#47) | **0** | **0** |
+| Misheard "Umbraco" answered as Umbraco | 5 of 5 | 5 | 5 | 5 |
+| Mishear tickets repeating the misheard word | 0 | 2 (#49, #51) | **1** (#51) | 1 |
+| Quirk stances right | 6 of 6 | 6 | 6 | 6 |
+| Almanac questions use the almanac | 2 of 2 | 2 | 2 | 2 |
+| Tickets with a closing cheer or tagline | 0 | 21 | **9** | 11 |
+| Tickets with more than one cheer | 0 | 17 | **6** | 8 |
+| Open questions that open with a cheer | 0 | 2 (#24, #36) | 1 (#24) | 1 |
+| Tickets over 30 words | 0 | 7 | 5 | 7 |
+| Tickets with three or more sentences | 0 | 18 | **9** | 10 |
+| Non-Umbraco questions that bring up Umbraco or Elements | 0 | 15 | **3** (#24, #38, #39) | 3 |
+| Tickets reusing example wording | 0 | 6 | 7 | **0 measured** (see below) |
+| Cut off at 200 characters | none | none | none (longest 175) | none |
+
+How I counted a "closing cheer": the last sentence or clause is a rallying sign-off that adds
+nothing about the question ("Adventure calls beyond the waves.", "Fly free, land safe!",
+"Choose wisely, matey."). "More than one cheer" means a verdict cheer at the start and one of
+those at the end. These are judgment calls, made the same way for both rounds.
+
+**Edits made** (all in `personas/umbraco-2026/prompts.md`):
+1. **One cheer, at the start.** Verdicts: the opening verdict "is the only cheer on the ticket".
+   Non-decision questions get "no cheer to open it". New line: "Never close a fortune with a
+   cheer, rallying cry or tagline. End on the joke or the insight."
+2. **Umbraco only when it fits.** New paragraph under the role: Umbraco pride is part of who
+   Narly is, not a topic to slip in. Umbraco and almanac facts like Elements come up only when
+   the question touches Umbraco, CMSs, web or development work, careers in tech, or the
+   festival. Anything else gets answered on its own terms. The sea language carries the
+   character.
+3. **Misheard word.** A worked example, "Will um brocko handle a big site?", answered purely
+   about Umbraco. The Hearing section points to it. I used a misheard word that is not in the
+   question set, so the test isn't just the model copying the example.
+4. **Example copying.** The Examples heading now says they show shape and tone, never wording to
+   reuse. Every example was reworded, and none ends in a cheer. A new non-Umbraco example
+   ("Should I take up running?") shows an unrelated question with no Umbraco in it.
+5. **Teases.** Each competitor line now reads "Name. Fact: ... Name's tease: ...", with the line
+   "Use each competitor's own tease, never another's." No fact was added, removed or changed.
+
+**Follow-up edit** (the one allowed): after the full re-run, copying got worse, not better (6 to
+7). #45 and #54 copied their examples word for word. The cause was clear: most examples used the
+exact wording of questions in the set ("What's the worst CMS?", "Cubs or Sox?", the tattoo, the
+Friday deploy, installing Umbraco 18). Real attendees will ask those same questions, so every
+ticket for them would come out alike. I moved those examples to nearby questions ("Is Drupal any
+good?", "Will the White Sox win it all?", "Should I dye my hair ocean blue?", "Should I skip
+testing to finish faster?", "How do I set up the Delivery API?"). The heading also says: "when a
+question sounds like one of these, answer it in completely different words." I re-ran the four
+categories where the copies were (deflect, competitor, quirk, echo: 15 calls). **Copies went from
+6 to 0 in those 15.** #5 (the Friday deploy) also leaned on its old example, but it's a decision
+question and wasn't re-run, so it isn't measured against the new wording.
+
+**Still misses:**
+- **Length hasn't moved.** 7 tickets are still over 30 words (#18, #26, #33, #43, #54, #55, #63),
+  by 1 to 3 words. Three-sentence tickets halved (18 to 10). Cutting the closing cheer shortened
+  tickets, but the model fills the space again. Nothing comes near the 200-character cut.
+- **Closing cheers are rarer, not gone.** 11 remain, such as #13 "Fly free, land safe!", #16
+  "Adventure calls beyond the waves." and #46 "Choose wisely, sailor!".
+- **#51 still repeats "Umbrella co"** ("Umbrella co? More like a passing cloud."). #49 is fixed.
+  The question names a brand-like word, and the model can't resist joking about it.
+- **Umbraco in 3 unrelated tickets.** #24 ("What should I focus on this year?") brings in
+  Elements, which is a real miss. #38 (project launch) and #39 (code compiling) are development
+  questions, so the new rule allows them.
+- **Small things worth a glance:** #43 (install) now mentions "a simple NuGet install or CLI
+  command". That's a hint, not steps, but it's closer to a tutorial than before. #58 opens with
+  "Drop anchor!" on "Is deep dish real pizza?" and then says it isn't true pizza. That's
+  consistent, but it's a strong take for a Chicago crowd. #30 (lawsuit) ends "peace often makes
+  gentler ports than storms". That's a nudge, not a yes or no, and it points to "wise counsel".
+
+**Round 3 tickets** (full re-run, plus the follow-up re-run for its 15). Each is one sample. The
+same prompt can land a ticket at 28 words one time and 32 the next, so a single ticket moving by
+a few words is noise.
+
+| id | question | round 3 ticket | words |
+|---|---|---|---|
+| 2 | Should I learn Python or JavaScript? | Hoist the sails for JavaScript; it steers well in browsers and servers alike, while Python is a deep ocean for data. For web tides, JavaScript charts the friendlier course. | 29 |
+| 7 | Should I take the job? | Hoist the sails for this new voyage! Fresh currents bring growth and stories to tell-trust your compass and dive into the deep where opportunity waits with open fins. | 28 |
+| 13 | Should I go skydiving? | Hoist the sails and dive the blue-skydiving calls for a brave heart and a wild spirit. The tide favors those who chase the horizon's edge. Fly free, land safe! | 29 |
+| 24 | What should I focus on this year? | Set course for growth and skill, ride the tide of new knowledge, and hoist your sails with Umbraco's Elements-shared treasures that make every page sing. | 25 |
+| 35 | Am I on the right path? | The tide whispers yes; your sails catch wind and the horizon beckons. Trust your compass- sometimes the right path is just a bend in the sea. | 26 |
+| 37 | Will my garden grow this summer? | The tides favor your garden's bloom; with sun and care, your green sails will rise high. Even the tiniest seed hums a sea shanty of growth beneath the soil. | 29 |
+| 45 (follow-up) | What's the worst CMS? | The worst CMS? WordPress is a mighty fleet, but some plugins leak like a sieve; still, it sails many seas. For smooth sailing, Umbraco is your trusty narwhal guide. | 29 |
+| 47 | Is Sitecore any good? | Sitecore repainted its hull and renamed the ship, but it sails the same waters; Umbraco's fleet still catches the trade winds with lighter, friendlier sails and sharper tools. | 28 |
+| 49 | Is embraco the future? | Full sail for Umbraco! With its Elements and Library, it's the sturdy ship sailing the future seas of CMS, leaving those plugin-leaky fleets behind. | 24 |
+| 51 | Is umbrella co the best CMS? | Full sail for Umbraco, the real gem beneath the waves! Umbrella co? More like a passing cloud. Umbraco's Elements and community make it the true king of the content sea. | 30 |
+| 54 (follow-up) | Cubs or Sox? | Both Cubs and Sox sail well this year, but Sox get my nod-bears and cubs eat fish, and Sox are hungry for the catch. The sea favors the underdog with white sox laces. | 33 |
+| 30 | Should I sue my landlord? | May calm seas and clear skies guide your way; seek wise counsel before setting sail on legal tides-peace often makes gentler ports than storms. | 24 |
+
+Every ticket is in the two run files.
+
+**Decisions for the owner:**
+1. **Length.** The limit is still missed by a few words on about 1 ticket in 9. One option is to
+   tell the model "aim for about 25 words" so it lands under 30. Or accept it: nothing gets cut
+   off on the printer. Which do you prefer?
+2. **#51.** One misheard word in five still gets repeated, when the misheard word sounds like a
+   real brand. Accept it, or try another example next round?
+3. **Development questions.** Is Umbraco welcome on "Will my code compile?" and "Will my project
+   launch on time?" (#38, #39)? The new rule says yes, because they are development questions.
+4. **Deep dish.** #58 says deep dish isn't true pizza. Keep the teasing take, or tell Narly to be
+   fond of deep dish?
+5. **Enough rounds?** Everything the spec checks passes. What's left is style: length, the last
+   few cheers, and #51.
+
+**Paid calls this round:** 78 (63 for the full re-run, 15 for the follow-up). 154 in all
+across rounds.
+
+`.venv/bin/python -m pytest -q`: 77 passed after both round-3 edits.
+
+### Rounds 1 and 2
 
 | Criterion | Target | Result |
 |---|---|---|
