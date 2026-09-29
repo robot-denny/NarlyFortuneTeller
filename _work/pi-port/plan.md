@@ -84,7 +84,8 @@ direct USB. `configure_providers` and `fakes.py` let the coin flow run in tests 
 - **Sound out: the Pi's headphone jack, by AUX cable to the Bose.** `deploy/asound.conf` makes the
   jack (ALSA card `Headphones`) the default output, because plugging in the AM8 reorders the cards.
   The unit sets `SDL_AUDIODRIVER=alsa` for pygame. The setup script sets the jack's volume to
-  100%, and the Bose's buttons do the rest. No Bluetooth, no PipeWire.
+  0 dB (changed from 100% on 2026-09-29: 100% is +4 dB and crackled), and the Bose's buttons do
+  the rest. No Bluetooth, no PipeWire.
 - **Printer: direct USB only on the Pi,** with a udev rule so the service user may open
   `0485:5741`. `python-escpos` detaches the kernel's `usblp` driver itself when it opens the
   printer. If that fails on the Pi ("Resource busy"), the fix is to blacklist `usblp`, and Step 8

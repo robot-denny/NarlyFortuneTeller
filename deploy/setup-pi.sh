@@ -26,7 +26,7 @@
 #   3. Gives your user access to the Arduino, the sound card, and the printer.
 #   4. Installs the printer rule, the sound setting, and the log setting.
 #   5. Installs Narly as a service that starts on power-up (but does not start him now).
-#   6. Turns the headphone jack up to 100%.
+#   6. Sets the headphone jack to its clean maximum (0 dB).
 #   Then it checks for .env and prints what to do next (the last "==>" line is
 #   "Setup finished. What next:").
 #
@@ -147,13 +147,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable narly
 
 # --- 6. Volume ---------------------------------------------------------------------------
-# Turn the jack all the way up; the Bose's own buttons set the real volume. "alsactl store"
+# Set the jack to its clean maximum; the Bose's own buttons set the real volume. "alsactl store"
 # saves the level so it survives a reboot. If the Headphones card is missing (for example,
 # audio is turned off in /boot/firmware/config.txt), warn and carry on: it is not worth
 # stopping the whole setup for.
-say "6. Setting the headphone jack to 100%"
-if amixer -c Headphones sset PCM 100% > /dev/null && sudo alsactl store; then
-    echo "    Headphone jack set to 100% and saved."
+# 0 dB, not 100%: on this chip 100% is +4 dB, which made loud cues crackle through the Bose
+# (tested 2026-09-29). Turn the Bose itself up instead.
+say "6. Setting the headphone jack to 0 dB (its clean maximum)"
+if amixer -c Headphones sset PCM 0dB > /dev/null && sudo alsactl store; then
+    echo "    Headphone jack set to 0 dB and saved."
 else
     warn "Could not set the headphone jack volume. Check the card with 'aplay -l'
     (it should list 'Headphones'). Setup carries on; see deploy/README.md."

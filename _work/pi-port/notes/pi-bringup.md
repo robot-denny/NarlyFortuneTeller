@@ -224,3 +224,14 @@ whether the re-check passed.
 - **Item 10, minor: a frozen SSH session wouldn't close** with Enter, `~`, `.`. Opening a new
   Terminal tab (Cmd+T) worked. The guide now says to close the tab with Cmd+W.
 
+- **Item 5 (setup) / 3: `/etc/asound.conf` broke all sound.** `aplay -l` printed `card is not a
+  string … /etc/asound.conf may be old or corrupted`, and setup warned it couldn't set the volume.
+  Cause: the short form `defaults.pcm.card Headphones` takes only a card number on this ALSA.
+  **Fix:** `14337b8`, the long form (`pcm.!default` plug to `hw:Headphones`, `ctl.!default` card
+  `Headphones`). Re-check: passed. `aplay -l` was clean (card 0 `Headphones`), and `speaker-test`
+  played through the Bose (`Playback device is default`).
+- **Item 3: scratchy hiss on the cues.** The jack was at 100%, which is +4 dB on this chip. At
+  `0dB` (and at `-6dB`) the scratch went away. **Fix:** the setup script now sets `0dB`. Saved on
+  the Pi with `sudo alsactl store`. A small click heard at the end of a hand-played
+  `sfx_generate.mp3` was the test command cutting it off at 5 s (`sfx stuck`), not Narly, who
+  plays that cue without waiting.
