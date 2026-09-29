@@ -278,3 +278,14 @@ whether the re-check passed.
 - **Side note: the Pi's clock starts two weeks in the past.** There's no battery clock, so it boots
   on a saved old time (`since … Sep 14` in `systemctl status`) and corrects itself once online.
   Timestamps early in a boot can be wrong. Worth knowing when reading logs after an event.
+- **Item 9: still failing after the flush fix. Parked, to come back to.** Redone 2026-09-29 without
+  re-running setup: three fortunes, a wait, a power pull. `journalctl -u narly -b -1` then said `No
+  such boot ID in journal`. The boot before the power cut isn't on the card at all, even though the
+  machine-id folder now exists. Not yet known: whether it's never written, or lost or discarded at
+  the power cut. Next to try: `journalctl --list-boots`, `ls -la /var/log/journal/*/` after a normal
+  `sudo reboot` (does a clean reboot keep it?), and look for `*.journal~` files (journald renames
+  damaged files). **The measuring session is unaffected**, because it logs to a file with
+  `--log-file`. For the event, a possible fallback is adding `--log-file` to the service.
+- **Item 4 extra:** after this power pull the first coin was NOT ignored, and one coin gave a
+  ticket. So a start-up COIN does sometimes arrive (it was swallowed instead of an attendee's),
+  just not every time. That's worth knowing before removing `first_coin_ignored`.
