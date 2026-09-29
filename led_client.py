@@ -35,7 +35,9 @@ class LedClient:
             return
         try:
             # exclusive=True: refuse to open a port another program already has.
-            self._ser = serial.Serial(port, baudrate=baud, timeout=1, exclusive=True)
+            # write_timeout: a write that can't go through gives up after 1 s rather than
+            # holding up a fortune (the failure is logged once, in _send).
+            self._ser = serial.Serial(port, baudrate=baud, timeout=1, write_timeout=1, exclusive=True)
             time.sleep(2.0)  # Uno resets on open
             self._ok = True
         except Exception as e:
@@ -71,6 +73,15 @@ class LedClient:
         if not self._ok:
             return
         try:
+            # The Arduino replies to every command. When this client owns the port (simulate
+            # mode), nothing else reads those replies, so throw them away first. Left to pile
+            # up, they filled the buffer after about seven questions and stalled every LED
+            # command for 15-20 s (Pi, 2026-09-29). A shared port (hardware mode) is left alone:
+            # the coin listener reads everything on it, coins included.
+            if self._owns_port:
+                clear = getattr(self._ser, "reset_input_buffer", None)
+                if clear:
+                    clear()
             for i in range(SEND_REPEATS):
                 if i:
                     time.sleep(SEND_GAP_S)

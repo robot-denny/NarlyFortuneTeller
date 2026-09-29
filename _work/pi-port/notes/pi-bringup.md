@@ -289,3 +289,11 @@ whether the re-check passed.
 - **Item 4 extra:** after this power pull the first coin was NOT ignored, and one coin gave a
   ticket. So a start-up COIN does sometimes arrive (it was swallowed instead of an attendee's),
   just not every time. That's worth knowing before removing `first_coin_ignored`.
+- **Step 9 session: lag built up after about question 7.** The Pi itself was fine
+  (`throttled=0x0`, 43 °C, load 0.06). The session log showed 15–19 s gaps right where the LED
+  commands go, plus 6 s before the mic opened. Cause (from Step 3): in simulate mode, one LED
+  connection stays open all session, and nothing reads the Arduino's replies (`Received: …`). They
+  filled the buffer, the Arduino stalled, and every LED write waited. Hardware mode (the event)
+  isn't affected, because its coin listener reads them. **Fix:** an owned LED port throws away
+  waiting replies before each command and has a 1 s write limit (tested). Also seen: Google took
+  about 5 s for the later questions, against about 0.8 s earlier. Probably the network. Watch it.

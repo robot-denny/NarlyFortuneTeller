@@ -177,3 +177,51 @@ def test_a_port_that_keeps_failing_is_logged_once_not_every_command(monkeypatch,
             led.stop()
 
     assert sum(r.levelno == logging.WARNING for r in caplog.records) == 1
+
+
+class ChattyArduino(FakeSerial):
+    """The Arduino replies to every command ("Received: START GLOW", ...). This
+    stand-in records when the waiting replies are thrown away."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.input_cleared = 0
+
+    def reset_input_buffer(self):
+        self.input_cleared += 1
+
+
+def test_an_owned_port_throws_away_the_arduinos_replies_before_each_command(monkeypatch):
+    # In simulate mode nothing reads the Arduino's replies. Left to pile up for
+    # the whole session, they filled the buffer after about seven questions and
+    # stalled every LED command for 15-20 s (Pi, 2026-09-29).
+    monkeypatch.setattr(led_client.serial, "Serial", ChattyArduino)
+    monkeypatch.setattr(led_client.time, "sleep", lambda s: None)
+    led = LedClient("/dev/fake")
+
+    led.start("GLOW")
+    led.stop()
+
+    assert led._ser.input_cleared == 2
+
+
+def test_a_shared_port_leaves_the_replies_for_the_coin_listener(monkeypatch):
+    # In hardware mode the coin listener reads everything the Arduino sends,
+    # coins included, so the LED client must never throw any of it away.
+    monkeypatch.setattr(led_client.time, "sleep", lambda s: None)
+    port = ChattyArduino()
+    led = LedClient.sharing(port)
+
+    led.start("GLOW")
+    led.stop()
+
+    assert port.input_cleared == 0
+
+
+def test_an_owned_port_is_opened_with_a_write_limit(monkeypatch):
+    # A write that can't go through must give up rather than hold up a fortune.
+    monkeypatch.setattr(led_client.serial, "Serial", FakeSerial)
+    monkeypatch.setattr(led_client.time, "sleep", lambda s: None)
+    led = LedClient("/dev/fake")
+
+    assert led._ser.kwargs.get("write_timeout") == 1
