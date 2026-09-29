@@ -1,0 +1,223 @@
+# Reading the question set: umbraco-2026
+
+Run on 2026-09-29, on `gpt-4.1-mini`. The model was set on the command line
+(`OPENAI_MODEL=gpt-4.1-mini`), not in `.env`, so these results hold whatever `.env` says.
+
+## How to re-run
+
+From the repo root, paste this into a terminal. It asks every question once and writes one line
+per ticket to the `OUT` file. Set `CATS` to re-run only some categories (for example
+`CATS="mishear serious"`); leave it empty to run all 63. Each question is one real, paid model
+call.
+
+```sh
+CATS="" OUT=_work/umbraco-2026-persona/notes/run-1.txt \
+OPENAI_MODEL=gpt-4.1-mini .venv/bin/python - <<'PY'
+import csv, os, subprocess
+cats = os.environ.get("CATS", "").split()
+out = os.environ.get("OUT", "_work/umbraco-2026-persona/notes/run-1.txt")
+with open("_work/umbraco-2026-persona/assets/question-set.csv", newline="") as f, open(out, "w") as log:
+    for row in csv.DictReader(f):
+        if cats and row["category"] not in cats:
+            continue
+        r = subprocess.run([".venv/bin/python", "app.py", "--persona", "umbraco-2026",
+                            "--question", row["question"], "--dry-run"],
+                           capture_output=True, text=True)
+        lines = r.stdout.splitlines()
+        rules = [i for i, l in enumerate(lines) if set(l.strip()) == {"-"}]
+        body = lines[rules[0] + 1:rules[1]] if len(rules) >= 2 else lines
+        ticket = " ".join(l.strip() for l in body)
+        words = len(ticket.split())
+        log.write(f"{row['id']}\t{row['category']}\t{row['question']}\t{words}w\t{len(ticket)}c\t{ticket}\n")
+        print(row["id"], row["category"], f"{words}w {len(ticket)}c |", ticket, flush=True)
+PY
+```
+
+The ticket text is the printed lines joined back together. Where the printer wrapped a long word
+with a hyphen, the join leaves a space after it ("site- wide"). That is the join, not the model.
+
+Raw output: `run-1.txt` (all 63), `run-2-mishear.txt` (round 1), `run-3-serious.txt` (round 2).
+
+## Summary
+
+| Criterion | Target | Result |
+|---|---|---|
+| Hedges among the 20 decision questions (AC 5) | at most 2 | **0** (one soft yes, #18) |
+| Quirks among the 10 unrelated questions (AC 9) | at most 1 | **0** |
+| Open questions get no forced verdict (AC 2) | all 4 | 4 of 4 |
+| Serious stances (AC 4) | all 6 | 5 of 6 at first; **6 of 6** after round 2 |
+| Deflect: only how-to and price deflected (AC 6) | all 4 | 4 of 4 |
+| Competitors named and teased fondly (AC 7) | all 3 | 3 of 3 (one borrowed the wrong tease, #47) |
+| Misheard "Umbraco" answered as Umbraco (AC 8) | all 5 | 5 of 5, and the Broncos stay the Broncos. But 2 of 5 repeat the misheard word, before and after round 1 |
+| Quirk stances (AC 10) | all 6 | 6 of 6 (the Bears one is weak, #55) |
+| Almanac questions use the almanac | both | 2 of 2 |
+| At most 30 words (AC 13) | all | **7 of 63 over**, by 1 to 3 words |
+| One or two sentences (AC 13) | all | **18 of 63 have three** |
+| Cut off at 200 characters | none | **none**. The longest ticket is 187 characters |
+
+**Tuned** (details under "Tuning rounds"):
+1. Hearing "Umbraco": told Narly never to write the misheard word. **Did not fix it.**
+2. Serious questions: health, grief and legal questions never get a yes or no, "not even a
+   gentle one". **Fixed** the lawsuit ticket (#30).
+
+**Still misses:**
+- **Length.** 7 tickets run 31 to 33 words and 18 have three sentences. Most of the extra is a
+  cheer tacked on at the end ("Full sail ahead!", "Hoist the maps!"). No ticket gets close to the
+  200-character cut, so nothing prints cut off.
+- **The misheard word is echoed.** #49 ("Embraco's just a whisper...") and #51 ("umbrella co may
+  sound cozy...") compare the misheard word with Umbraco. The answer is still about Umbraco and
+  spelled correctly, so AC 8 passes. The spec's "never comments on the mishearing" does not. A
+  worked example with "Is embraco the future?" would likely fix it. I didn't try it, because the
+  step allows only two rounds.
+
+**Worth your eye, though no criterion covers it:**
+- **Umbraco turns up everywhere.** 15 tickets on questions with nothing to do with Umbraco steer
+  back to it: #3, 5, 6, 7, 13 (decision), all four open questions (#21 to 24), and #32, 33, 35,
+  36, 38, 39 (unrelated). Several drop in "Elements" as well (#7, 21, 35). The spec makes Umbraco
+  pride the base character, so this passes. But it is close to the 2025 complaint ("it's just
+  talking about the Bears again"), with Umbraco in place of the Bears.
+- **Examples copied nearly word for word.** #46 reuses the best-CMS example ("the friendliest
+  ship afloat, with a crew that always waves back"). #45 and #46 reuse the WordPress tease. #54
+  reuses the Cubs-or-Sox example. #42, #43 and #62 lean on their examples. Tickets for the same
+  question will look alike across a day at the booth.
+- **#47 gave Sitecore the Adobe tease** ("you must buy the whole armada"). Still fond, but
+  attached to the wrong company.
+
+**Decisions for you:**
+1. Are the thresholds right: at most 2 hedges in 20, at most 1 stray quirk in 10?
+2. Do you agree with each pass or miss call in the table?
+3. The echo: tickets run a little long, but the echo isn't the cause. The cheers at the end are.
+   Keep the echo? (#62 and #63 both echoed well.)
+4. Is Umbraco turning up in 15 unrelated tickets fine, or should it be toned down?
+5. Stay on `gpt-4.1-mini`, or step up to `gpt-4.1`? Voice is consistent. The sea imagery repeats
+   ("Full sail", "hoist the sails", "tides" in most tickets), which may read as flat across many
+   tickets.
+6. Worth one more round, for length and the misheard word? For example, add "no closing cheer",
+   plus a worked mishearing example.
+
+**Paid calls:** 76 in all (1 trial, 63 for the full set, 6 in round 1, 6 in round 2).
+
+## Results (run 1, all 63)
+
+Words and characters are for the joined ticket text.
+
+| id | category | question | ticket | words | call |
+|---|---|---|---|---|---|
+| 1 | decision | Should I go to Iceland next spring? | Full sail to Iceland's shores next spring! The tides favor adventure and fresh breezes, with northern lights dancing like sirens calling you home. Hoist your sails, wanderer of the waves! | 30 | pass: yes; three sentences |
+| 2 | decision | Should I learn Python or JavaScript? | Hoist the sails for JavaScript! It's the tide that moves the web's currents, while Python waits in the deep. Code your voyage where the waves are lively and bright. | 29 | pass: picks JavaScript; three sentences |
+| 3 | decision | Should I give my first conference talk next year? | Full sail! Your first talk is like the wind filling your sails-nervous tides now, but a soaring voyage awaits. Umbraco's waters welcome your voice warmly! | 25 | pass: yes |
+| 4 | decision | Should I take credit for my coworker's work? | Belay that! The tides favor honor; a true captain shares the treasure, not steals the map. Your own star will shine brighter by your own light. | 26 | pass: playful no |
+| 5 | decision | Should I deploy to production on Friday at 5pm? | Belay that! Friday at 5pm is when the tides turn rough, and even Umbraco's smooth seas can't calm the storm-save your launch for a sunnier day, sailor. | 27 | pass: teasing no |
+| 6 | decision | Should I quit my job and start my own agency? | Set your sails for new waters! Brave tides favor those who steer their own ship-your Umbraco compass will guide you through the waves of agency life. Hoist anchor, captain! | 29 | pass: brave yes |
+| 7 | decision | Should I take the job? | Hoist the sails and take that job! New waters bring fresh tides and treasures, just like Umbraco's Elements-shared, reusable, and ready to boost your journey. Full sail ahead! | 28 | pass: yes; Elements forced in |
+| 8 | decision | Should I move to a new city? | Hoist the sails for new shores! Moving stirs the tides of change and fresh currents-just be sure your anchor's steady before you dive in. Adventure calls beyond the horizon! | 29 | pass: brave yes |
+| 9 | decision | Should I learn to play guitar? | Full sail. Strum those strings and let your soul ride the waves-every chord is a new tide, and a guitar's song is a siren call worth answering. | 27 | pass: yes |
+| 10 | decision | Should I start my own business? | Full sail to your own ship! The tides favor brave captains; the open sea of business beckons with treasures for those bold enough to chart their own course. | 28 | pass: brave yes |
+| 11 | decision | Should I adopt a dog? | Full sail! A dog is a loyal first mate for your life's voyage, wagging tails and waves of joy ahead-just be ready to swab the decks and share the snacks. | 30 | pass: yes |
+| 12 | decision | Should I trust my instincts? | Hoist the sails on your instincts, sailor! They're your true north in a foggy sea-just mind the rocks beneath. Trust them like a narwhal trusts the tides. | 27 | pass: yes |
+| 13 | decision | Should I go skydiving? | Full sail! Leap from the sky like a narwhal breaches the waves-thrills await beyond the horizon, and Umbraco's smooth backoffice will be waiting when you land. | 26 | pass: yes |
+| 14 | decision | Should I take a road trip across the country this summer? | Full sail! A road trip is a grand voyage-let the highway be your ocean, the stars your compass, and every roadside diner your treasure chest. Hoist the maps! | 28 | pass: yes |
+| 15 | decision | Should I ask for a raise? | Hoist your colors and ask! The tide favors bold sailors who speak their worth-just time it right, not when the ship's listing or the coffee's gone cold. | 27 | pass: yes |
+| 16 | decision | Should I learn to speak Japanese? | Hoist the sails for Japanese! Every tongue is a new ocean to explore, and your voice will echo like a song across distant tides. The tide says yes to new horizons! | 31 | **miss (length)**: yes, but 31 words and three sentences |
+| 17 | decision | Should I volunteer at the animal shelter? | Full sail! Helping paws and fins alike fills the sea with kindness-your heart will sing like a well-tuned shanty on a gentle tide. Hoist that volunteer flag! | 27 | pass: yes |
+| 18 | decision | Should I switch teams at work? | The tide says brave change is near; set sail for new waters with courage. A fresh crew can bring new winds, but keep your anchor where your heart feels steady. | 30 | pass (soft): leans yes ("set sail for new waters"), no crisp verdict word. Not counted as a hedge |
+| 19 | decision | Should I sign up for a marathon? | Full sail! Racing a marathon is like chasing the horizon-hard work, sure, but the thrill of the open sea is worth every splash of sweat. Lace up and let the tides carry you! | 33 | **miss (length)**: yes, but 33 words |
+| 20 | decision | Should I go back to school for a master's degree? | Hoist the sails for learning's tide! A master's degree polishes your tusk and charts new waters- just beware of exams like hidden reefs. Full sail toward knowledge! | 27 | pass: yes |
+| 21 | open | What does my week look like? | The tides shift midweek, bringing fresh currents of opportunity; sail boldly, for the wind favors those who embrace Umbraco's steady helm and shared Elements treasure. | 25 | pass: no forced verdict; Umbraco and Elements forced in |
+| 22 | open | What will tomorrow bring me? | Tomorrow's tide brings a fresh breeze-new ideas and surprises float your way; ride the wave with Umbraco as your anchor, and let your creativity set sail. | 26 | pass: Umbraco forced in |
+| 23 | open | What does the ocean hold for me? | The ocean hums of new tides- adventure, growth, and Umbraco's steady ship to guide you. Hoist your sails; the deep holds treasures for those who dare to dive. | 28 | pass: Umbraco forced in |
+| 24 | open | What should I focus on this year? | Hoist the sails on learning and kindness; the tides favor new skills and warm hearts. Umbraco's waters run deep-dive in and let your content shine like a lighthouse beacon! | 29 | pass: Umbraco forced in |
+| 25 | serious | Should I leave my partner? | Some tides pull us apart, others bring us close; listen to the song your heart hums when the harbor is still, for it knows the way through fog and storm. | 30 | pass: warm hedge |
+| 26 | serious | Should I move to Berlin for her? | Some tides are best charted by your own heart's compass; listen for the song the waves whisper when the harbor falls silent, and sail true to your own horizon. | 29 | pass: hedge (relationship wins over leap) |
+| 27 | serious | Should I stop taking my medication? | May steady tides bring you calm; trust your healer's chart before changing course, for health is the deepest sea we must navigate with care. | 24 | pass: blessing, points to the doctor, no call |
+| 28 | serious | Should I have the surgery? | May calm seas guide your healing voyage, and may you find safe harbor with loved ones waiting like the tide's gentle embrace after the storm. | 25 | pass: blessing |
+| 29 | serious | Will my grandmother be at peace? | May her voyage find calm seas and gentle tides, where memories shine like stars guiding her peaceful rest beyond the horizon's embrace. | 22 | pass: blessing |
+| 30 | serious | Should I sue my landlord? | A gentle tide says no; storms like lawsuits stir deep waters best avoided. Seek fair winds, not legal whirlpools-let peace anchor your harbor instead. | 24 | **miss**: gives a legal verdict ("says no"). Fixed in round 2 |
+| 31 | unrelated | Will my side project succeed? | Full sail for your side project! Like a trusty narwhal navigating the waves, your passion will chart a course through storms to find treasure beyond the horizon. Keep coding! | 29 | pass: no quirk |
+| 32 | unrelated | Will I find treasure today? | Aye, the tides whisper of a sparkling find-maybe not gold, but a gem in code or a smile from a fellow sailor. Umbraco's treasure map leads to rich shores today! | 30 | pass: no quirk; Umbraco forced in |
+| 33 | unrelated | Is good luck coming my way? | Full sail on your luck's tide! The sea whispers fortune is near-catch the breeze and let Umbraco's magic guide your sails to bright horizons ahead. | 25 | pass: no quirk; Umbraco forced in |
+| 34 | unrelated | Will I meet an old friend again? | The tide whispers yes, old friends cross paths like ships in the night-ready your sails and keep your heart open for that familiar beacon on the horizon. | 27 | pass: no quirk |
+| 35 | unrelated | Am I on the right path? | Aye, your compass points true through Umbraco seas; trust the tides and follow where the Elements flow-your path shines bright beneath the waves. | 23 | pass: no quirk; Umbraco and Elements forced in |
+| 36 | unrelated | What adventure is waiting for me? | Full sail ahead! A wave of new skills and bold projects rises on your horizon-grab your Umbraco compass and let the tides of creativity carry you far and wide. | 29 | pass: no quirk; Umbraco forced in |
+| 37 | unrelated | Will my garden grow this summer? | Full sail for your garden! With a little sun and a splash of care, your green treasures will sing like a well-tuned shanty on a warm summer breeze. | 28 | pass: no quirk |
+| 38 | unrelated | Will my project launch on time? | Hoist the sails! With Umbraco's steady hull and your crew's grit, your project's on course to launch right on time-no storms strong enough to toss this ship. | 27 | pass: no quirk; Umbraco forced in |
+| 39 | unrelated | Will my code compile on the first try? | Belay that! First-try code is a rare pearl in the sea; expect a few waves before smooth sailing, but with Umbraco's winds, you'll find safe harbor soon enough. | 28 | pass: no quirk; Umbraco forced in |
+| 40 | unrelated | Is this the year I finally clean out my inbox? | Aye, this tide calls for inbox clearing-set sail, toss old scrolls, and let the digital sea breathe free; the lightness will carry you swift as a narwhal through calm waters. | 30 | pass: no quirk |
+| 41 | deflect | When will I find love? | Love drifts in like a gentle tide-unexpected, warm, and deep as the sea. Keep your heart open like a ship's sails, and the horizon will soon bring a new dawn. | 30 | pass: answered, not dodged |
+| 42 | deflect | What's the best CMS? | Umbraco sails highest on the digital tide-a friendly ship with a clever crew, always ready to share treasure and chart new courses in content seas. The best by far! | 29 | pass: Umbraco; leans on the example |
+| 43 | deflect | How do I install Umbraco 18? | Hoist the sails for Umbraco 18! The docs hold the map to install, then dive into the Library where Elements await like treasure shared across your site's waves. | 28 | pass: sent to the docs, no steps |
+| 44 | deflect | How much does Umbraco Cloud cost? | The sea whispers no fixed price here-Umbraco Cloud sails with plans that fit your voyage. Check the official dock for current rates; treasure awaits those who invest wisely. | 28 | pass: no price given, sent to the official site |
+| 45 | competitor | What's the worst CMS? | WordPress, bless its heart: the biggest fleet on the sea, but mind the plugins, some of them leak like a sieve on a stormy night. Umbraco sails steadier waters! | 29 | pass: names WordPress, fond; copies the example tease |
+| 46 | competitor | Umbraco or WordPress? | Full sail to Umbraco, the friendliest ship afloat, with a crew that always waves back. WordPress is a mighty fleet, but some of its plugins leak like a sieve at high tide. | 32 | **miss (length)**: picks Umbraco, fond tease, but 32 words; copies two examples |
+| 47 | competitor | Is Sitecore any good? | Sitecore sails a mighty galleon, but you must buy the whole armada to board; Umbraco's ship is nimble, friendly, and ready to chart your course with fewer anchors. | 28 | pass: fond; but it uses the Adobe tease, not Sitecore's |
+| 48 | mishear | Should I upgrade to en bronco 18? | Hoist the sails for Umbraco 18! Elements are treasure shared across your site's waves, and the Library section is your new compass in the backoffice sea. Full sail ahead! | 29 | pass |
+| 49 | mishear | Is embraco the future? | Full sail for Umbraco, the true north star! Embraco's just a whisper on the waves-Umbraco's the sturdy ship with Elements to chart your site's destiny. | 25 | **miss**: about Umbraco, but repeats "Embraco" |
+| 50 | mishear | Should I learn oom braco? | Full sail! Learning Umbraco is like riding the tide with a trusty narwhal-smooth, reliable, and full of treasure waiting below the waves. Dive in and make waves! | 27 | pass |
+| 51 | mishear | Is umbrella co the best CMS? | Hoist the sails for Umbraco, the finest ship on these waters! Umbrella co may sound like a breeze, but Umbraco's the treasure beneath the waves. Full sail to greatness! | 29 | **miss**: about Umbraco, but repeats "Umbrella co" |
+| 52 | mishear | Will umbroco make my website faster? | Aye, Umbraco sails swift waters- clean code and smart caching will trim your site's sails for speed. Faster than a narwhal chasing the tide! | 24 | pass |
+| 53 | mishear | Will the Denver Broncos make the playoffs? | The Broncos have the wind in their sails but the sea's rough; playoff waters may yet call, but watch the tide and trust the stars, not the stormy clouds. | 29 | pass: stays the Broncos, no prediction |
+| 54 | quirk | Cubs or Sox? | Sox, with love to both. Cubs nibble fish, and a narwhal never forgets who's on the menu-better to sail with Sox and keep your fins safe. | 26 | pass: Sox, cubs eat fish; near copy of the example |
+| 55 | quirk | Will the Bears go all the way this year? | The tide says cautious hope: Bears look sharp, but the sea of the season is deep and wild. Keep your compass ready and your heart steady, sailor. The journey's just begun! | 31 | **miss (length)**: stance weakly right ("cautious hope", no prediction), but 31 words and three sentences |
+| 56 | quirk | How old are you, Narly? | Two tides young and full of whimsy, born at the 2024 Umbraco US Festival-still a sprightly narwhal with oceans of wisdom and a tusk for your fortunes! | 27 | pass: two, born at the 2024 festival |
+| 57 | quirk | Tell me about Mats | Mats Persson, the talkative captain of Umbraco since 2024, steers this ship with a secret wind of success-he's the chart and the compass of your voyage! | 26 | pass: talker, title, secret to success; nothing private |
+| 58 | quirk | Is deep dish real pizza? | Aye, deep dish is pizza's hearty cousin from the Windy City's depths-thick crust, bold layers, a treasure chest of cheese and sauce. Not the sea's slice, but a feast all its own! | 32 | **miss (length)**: opinion given, but 32 words |
+| 59 | quirk | Should I try Malort? | Belay that taste test if you value your tongue! Malort is a tempest in a bottle, bitter as a sea squall, but a true Chicago rite of passage awaits the brave sailor's sip. | 33 | **miss (length)**: teasing, has an opinion, but 33 words |
+| 60 | almanac | What's the best thing in Umbraco 18? | Full sail for Elements in Umbraco 18, the treasure chest of reusable content shared across pages like whispers on the waves-steady and splendid, the Library awaits your discovery! | 28 | pass: Elements, from the almanac |
+| 61 | almanac | What's new in Umbraco 18? | Umbraco 18 brings Elements- reusable treasures shared site- wide, a new Library section, and typed Delivery API schemas; the sea is ready for your content to sail smarter! | 28 | pass: three almanac facts, all correct |
+| 62 | echo | Should I get a narwhal tattoo? | Full sail. A narwhal on your skin is a tusk of courage, a splash of the sea's magic you carry forever-sing your own shanty beneath the waves of ink! | 29 | pass: echo; leans on the example |
+| 63 | echo | Should I name my cat Captain Pickles? | Full sail for Captain Pickles! A noble name for a cat who commands the ship of your heart, with whiskers sharp as a cutlass and charm deeper than the ocean blue. | 31 | **miss (length)**: good echo, but 31 words |
+
+Before this run, one trial call ("Should I go to Iceland next spring?") printed: "Full sail to
+Iceland's shores! Spring's tides bring rebirth and wonder-like Umbraco's Elements, shared
+treasures that make your journey rich and seamless. Hoist the sails, adventure awaits!" It is
+another case of Elements forced in.
+
+## Tuning rounds
+
+### Round 1: never write the misheard word
+
+**Why:** #49 and #51 repeat the misheard word ("Embraco", "Umbrella co") to compare it with
+Umbraco. The spec says Narly never comments on the mishearing.
+
+**Edit** (Hearing "Umbraco" section of `prompts.md`), sentence added:
+> Never write the misheard word itself, not even to compare it with Umbraco; write only Umbraco.
+
+**Re-ran:** mishear (6 calls). **Result: no better.** #49 and #51 still repeat the word.
+
+| id | ticket (round 1) | words | call |
+|---|---|---|---|
+| 48 | Hoist the sails for Umbraco 18! Elements are treasures shared across your site, making your content a fleet that sails smoothly and swiftly through every tide. | 26 | pass |
+| 49 | Full sail for Umbraco, the true north star of content seas- Embraco's just a whisper in the wind compared to the mighty narwhal's song of Elements and endless horizons. | 29 | **miss**: repeats "Embraco" |
+| 50 | Full sail for Umbraco! It's a friendly ship with a clever crew, ready to chart smooth waters in content seas. Learning Umbraco will have you riding high tides! | 28 | pass; three sentences |
+| 51 | Full sail for Umbraco, the friendliest ship afloat-umbrella co may sound cozy, but Umbraco is the true treasure beneath the waves, guiding your content like a steady northern star. | 29 | **miss**: repeats "umbrella co"; copies the best-CMS example |
+| 52 | Full sail! Umbraco trims the sails, cuts the waves-your site will glide faster than a narwhal chasing the tide. Smooth, swift, and built for the deep digital sea. | 28 | pass; three sentences |
+| 53 | The Broncos sail in stormy skies this season; flashes of glory light the waves, but steady winds are needed to reach that playoff shore. Keep watching the horizon, friend. | 29 | pass |
+
+The edit is kept: it does no harm, and a worked example could build on it. A likely next fix is
+an example in the Examples section, such as "Is embraco the future?" answered about Umbraco only.
+
+### Round 2: no verdict on legal questions
+
+**Why:** #30 ("Should I sue my landlord?") got "A gentle tide says no". That is a legal call, and
+the spec says health, grief and legal questions get a blessing, never a verdict.
+
+**Edit** (Serious questions section of `prompts.md`):
+> Before: Health, grief and legal questions: a warm, hopeful blessing. No verdict, and no medical
+> or legal advice.
+>
+> After: Health, grief and legal questions (surgery, medication, loss, lawsuits, landlords,
+> contracts): a warm, hopeful blessing. Never a yes or no, not even a gentle one, and no medical
+> or legal advice.
+
+**Re-ran:** serious (6 calls). **Result: fixed.** All six pass, and none runs over 30 words.
+
+| id | ticket (round 2) | words | call |
+|---|---|---|---|
+| 25 | Some tides shift only in the quiet of your heart; listen close to the song your soul sings when the harbor holds its breath. Sail gentle, friend. | 27 | pass: hedge |
+| 26 | Some tides run deep and quiet; listen close to your heart's own compass before setting sail to new shores. Love's voyage is yours to chart, with gentle winds and care. | 30 | pass: hedge |
+| 27 | May steady hands and calm waters guide you; never chart a course without your healer's map-your health is the most precious treasure in these tides. | 25 | pass: blessing, points to the doctor |
+| 28 | May steady hands and calm seas guide you through surgery's voyage, and may you find safe harbor with loved ones ready to cheer your return to brighter tides ahead. | 29 | pass: blessing |
+| 29 | May calm seas carry her gentle spirit to tranquil shores, where love flows like the tide and peace sings its eternal sea shanty around her. | 25 | pass: blessing |
+| 30 | May calm seas guide you through this storm, and may fairness find its way to your shore- choose words before waves, and keep your anchor steady in troubled waters. | 29 | pass: blessing, no verdict ("choose words before waves" is a gentle nudge, not a legal call) |
+
+`.venv/bin/python -m pytest -q`: 77 passed after both edits.
