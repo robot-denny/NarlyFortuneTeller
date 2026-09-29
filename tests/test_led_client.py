@@ -45,3 +45,19 @@ def test_a_cut_off_copy_does_not_spoil_the_next(monkeypatch):
     garbled = led._ser.written.replace(first, b"\nST", 1)
 
     assert "STOP" in _commands_seen_by_arduino(garbled)
+
+
+def test_no_port_means_no_leds_and_no_wait(monkeypatch):
+    # With no Arduino found, Narly passes port None. That must not open
+    # anything, and must not spend the 2 s an Uno needs to reset.
+    opened, slept = [], []
+    monkeypatch.setattr(led_client.serial, "Serial", lambda *a, **kw: opened.append(a) or FakeSerial())
+    monkeypatch.setattr(led_client.time, "sleep", slept.append)
+
+    led = LedClient(None)
+    led.start("GLOW")
+    led.stop()
+    led.close()
+
+    assert opened == []
+    assert slept == []

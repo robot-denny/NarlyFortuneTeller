@@ -36,8 +36,18 @@ except Exception:
 _BASE_DIR = Path(__file__).resolve().parent
 
 # ---- Serial config ----
-PORT = "/dev/cu.usbmodem143301"  # Change to your Arduino port, e.g. "COM4" on Windows
 BAUD = 115200
+
+# USB vendor IDs that Arduino boards report. 0x2341 is Arduino (the owner's
+# Uno); 0x2A03 is the same boards sold under arduino.org. Cheap clones with a
+# CH340 chip (0x1A86) are left out on purpose: that chip is in lots of other
+# USB-serial adapters too, so it would match things that aren't Narly's board.
+ARDUINO_VIDS = {0x2341, 0x2A03}
+
+# How often to look for the Arduino while waiting for it (seconds), and how
+# often to say so in the log.
+PORT_RETRY_S = 2
+PORT_WAIT_LOG_S = 60
 
 # ---- Timeout configuration (in seconds) ----
 TIMEOUT_RECORDING = 15      # Max time to wait for speech input
@@ -49,7 +59,7 @@ SFX_START = str(_BASE_DIR / "sfx" / "sfx_magic.mp3")      # Plays when mic is re
 SFX_END   = str(_BASE_DIR / "sfx" / "sfx_generate.mp3")   # Plays when AI starts generating
 
 # LED control usually shares the same board/port
-LED_PORT = PORT  # override with --port if you use a separate LED Arduino
+LED_PORT = None  # set by main(): --port, or the detected Arduino; None means no LEDs
 
 # ---- Module-level config (set at startup by main()) ----
 _config = None
@@ -95,16 +105,67 @@ def _flatten(value: str) -> str:
     return " ".join(str(value).split()).replace('"', "'")
 
 
-def find_port():
-    """Try to auto-detect an Arduino-like serial device if --port not provided."""
+def find_port(ports=None, quiet=True):
+    """Find an Arduino-like serial device, or return None if there isn't one.
+
+    `ports` is a list of serial ports, each with `.device`, `.description` and
+    `.vid`. Leave it out to use the ports this machine lists right now. A port
+    counts as the Arduino if any of these is true:
+      - its USB vendor ID is an Arduino one (the most reliable test; it works
+        on the Mac and on the Pi alike),
+      - its description mentions "Arduino",
+      - its name contains "usbmodem" (how macOS names a board like the Uno).
+
+    If listing the ports fails, this returns None as if nothing were plugged
+    in. With `quiet=False` it raises the error instead, so `wait_for_port` can
+    say why it is still waiting.
+    """
     try:
-        import serial.tools.list_ports
-        for p in serial.tools.list_ports.comports():
-            if "Arduino" in (p.description or "") or "usbmodem" in (p.device or ""):
+        if ports is None:
+            import serial.tools.list_ports
+            ports = serial.tools.list_ports.comports()
+        for p in ports:
+            if (p.vid in ARDUINO_VIDS
+                    or "Arduino" in (p.description or "")
+                    or "usbmodem" in (p.device or "")):
                 return p.device
     except Exception:
-        pass
+        if not quiet:
+            raise
     return None
+
+def wait_for_port(find=None, sleep=time.sleep):
+    """Wait until an Arduino is plugged in, then return its port.
+
+    Tries `find()` every PORT_RETRY_S seconds. Says "Waiting for the Arduino"
+    on the first miss, then again about once a minute, so the log shows it is
+    still waiting without filling up. It never gives up: on the Pi, exiting
+    would make the service restart Narly over and over until it gave up for
+    good, which is the wrong outcome for an Arduino plugged in a minute late.
+    Ctrl+C stops it. `find` and `sleep` can be swapped out by a test.
+
+    If looking for the Arduino itself fails (for example, no permission to
+    list the ports), the waiting line says why, so the log shows a real
+    problem and not just "plug it in".
+    """
+    find = find or (lambda: find_port(quiet=False))
+    tries_per_log = max(1, PORT_WAIT_LOG_S // PORT_RETRY_S)
+    misses = 0
+    while True:
+        try:
+            port, problem = find(), None
+        except Exception as e:
+            port, problem = None, e
+        if port:
+            return port
+        if misses % tries_per_log == 0:
+            line = "⏳ Waiting for the Arduino... plug it in (or use --port). Ctrl+C to stop."
+            if problem:
+                log.warning(f"{line} (port scan failed: {_flatten(problem)})")
+            else:
+                log.info(line)
+        misses += 1
+        sleep(PORT_RETRY_S)
 
 # ----------------------------------------
 # Recording / Transcription
@@ -486,9 +547,11 @@ def build_providers(args):
 # ----------------------------------------
 # CLI
 # ----------------------------------------
-def main():
-    global PORT, LED_PORT, _config
+def build_parser():
+    """Build the command-line parser: every flag Narly accepts, with its help text.
 
+    Kept apart from main() so a test can check how flags are read without
+    starting Narly."""
     parser = argparse.ArgumentParser(
         description="Narly Fortune Orchestrator - coordinates coin → mic → AI → print flow"
     )
@@ -500,8 +563,8 @@ def main():
     )
     parser.add_argument(
         "--port",
-        default=PORT,
-        help=f"Serial port for hardware mode (default: {PORT})"
+        default=None,
+        help="Serial port of the Arduino, e.g. /dev/ttyACM0 (auto-detect if omitted)"
     )
     parser.add_argument(
         "--dry-run",
@@ -582,6 +645,13 @@ def main():
         )
     )
 
+    return parser
+
+
+def main():
+    global LED_PORT, _config
+
+    parser = build_parser()
     args = parser.parse_args()
     if args.mode != "simulate" and (args.offline or args.clip or args.question):
         parser.error("--offline/--clip/--question are only valid with --mode simulate")
@@ -614,18 +684,17 @@ def main():
     get_audio, transcribe, fortune = build_providers(args)
     configure_providers(get_audio, transcribe, fortune, PygameAudioOut())
 
-    # Keep LED port aligned to main serial unless you override at runtime
-    PORT = args.port or PORT
-    LED_PORT = PORT
-
     if args.mode == "hardware":
-        port = args.port or find_port()
-        if not port:
-            log.error("❌ Could not auto-detect serial port.")
-            log.error("   Use --port to specify manually, e.g.: --port /dev/cu.usbmodem143101")
-            sys.exit(1)
+        # Hardware mode needs the Arduino for coins, so wait for it if it isn't there yet.
+        port = args.port or wait_for_port()
+        log.info(f"Arduino port: {port}")
+        LED_PORT = port  # the LEDs are on the same board
         listen_serial_mode(port, dry_run=args.dry_run)
     else:
+        # Simulate mode doesn't need the Arduino: use it for LEDs if it's there,
+        # otherwise carry on without LEDs.
+        LED_PORT = args.port or find_port()
+        log.info(f"LED port: {LED_PORT or 'none found, running without LEDs'}")
         simulate_mode(dry_run=args.dry_run, auto=args.auto, interval=args.interval,
                       save_clips=bool(args.save_clips))
 

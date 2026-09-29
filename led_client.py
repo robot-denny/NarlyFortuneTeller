@@ -12,7 +12,7 @@ class LedClient:
     def __init__(self, port="/dev/tty.usbmodem143101", baud=115200):
         self._ok = False
         self._ser = None
-        if serial is None:
+        if serial is None or port is None:  # no Arduino: no LEDs, and no reset wait
             return
         try:
             self._ser = serial.Serial(port, baudrate=baud, timeout=1)
