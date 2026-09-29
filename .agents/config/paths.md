@@ -15,7 +15,7 @@ module.
 | `formatters.py` | `render_ticket(message, config)` — 32-char thermal ticket layout. |
 | `print_client.py` | Thermal printer driver (ESC/POS). |
 | `led_client.py` | Arduino LED control over serial. |
-| `personas/<name>/` | `content.json` + `prompts.md` per persona. Currently `default`, `music`, `umbraco-2025`. |
+| `personas/<name>/` | `content.json` + `prompts.md` per persona. Currently `default`, `music`, `umbraco-2025`, `umbraco-2026`. |
 | `sfx/` | Sound effects (mp3), resolved from `_BASE_DIR / "sfx"`. |
 | `arduino/fortune-controller/` | The Arduino sketch (`.ino`). |
 | `docs/` | Durable reference — `narly-behavior.md`, `v2-upgrade-plan.md`, `reference/` wiring photos. |

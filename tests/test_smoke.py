@@ -12,11 +12,11 @@ from config_loader import list_personas, load_config
 from formatters import render_ticket
 
 
-def test_list_personas_returns_the_three_known_personas():
+def test_list_personas_returns_the_four_known_personas():
     """Config loading still finds every persona folder that has a content.json."""
     # Update this list when a persona folder is added or removed — that is a
     # deliberate content change, and this test exists to make you notice it.
-    assert list_personas() == ["default", "music", "umbraco-2025"]
+    assert list_personas() == ["default", "music", "umbraco-2025", "umbraco-2026"]
 
 
 @pytest.mark.parametrize("persona", list_personas())
