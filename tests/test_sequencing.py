@@ -66,12 +66,15 @@ def test_calibration_happens_before_the_chime_and_listening_right_after_it():
     assert audio is AUDIO  # whatever listen() heard is what comes back
 
 
-def test_library_wake_threshold_and_adaptation_are_left_alone():
-    """Nothing overrides the library's threshold (300) or turns its adaptation off."""
+def test_calibrated_threshold_is_kept_and_held_while_listening():
+    """The room measurement is not overwritten, and it stops adapting once taken.
+
+    Adapting mid-question raised the threshold toward the speaker's loudness, so
+    a softer last word counted as the pause and was cut off."""
     _, fake, _ = _run()
 
-    assert fake.energy_threshold == 300
-    assert fake.dynamic_energy_threshold is True
+    assert fake.energy_threshold == 300  # nothing overwrites what calibration set
+    assert fake.dynamic_energy_threshold is False
 
 
 def test_pause_threshold_still_allows_thinking_pauses():
