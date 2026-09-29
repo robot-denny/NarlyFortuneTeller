@@ -274,3 +274,49 @@ word it was given right. Four lost the last word or two (ids 4, 7, 26, 27), four
 word (ids 6, 21, 24, 29). The replay matches the live score miss for miss, so a different
 recognizer wouldn't change these; when Narly starts and stops recording would. The end cut-offs
 are what the held `dynamic_energy_threshold` fix targets.
+
+### 2026-09-28, home office, the laptop, wake level held
+
+The same setup, noise, and 20 questions as the entry above, run the same evening. One change:
+Narly holds the room's wake level while listening instead of raising it mid-question
+(`dynamic_energy_threshold = False` after calibration).
+
+**Setup and conditions:** as above. Mac input checked as the AM8: yes.
+
+- Anything unusual: two ids were mistyped at the prompt (`77` for 7, `2424` for 24). Both were
+  heard correctly. The scores below come from a copy of the log with those two ids fixed; the
+  original log is kept beside it.
+
+**Live**
+
+- Heard correctly overall: 95% (19 of 20)
+- quiet: 100% (10 of 10)
+- conversation: 90% (9 of 10)
+- Unreachable (recognizer_error, left out of the shares): 0
+- Hit the 8-second cap: 0
+- Misses by kind: misheard 1
+
+| id | kind | asked | heard |
+| --- | --- | --- | --- |
+| 26 | misheard | Will I travel somewhere warm soon? | will I travel somewhere warm |
+
+**Replay**
+
+- Heard correctly overall: 95% (19 of 20)
+- quiet: 100% (10 of 10)
+- conversation: 90% (9 of 10)
+- Unreachable (recognizer_error, left out of the shares): 0
+- Hit the 8-second cap: 0
+- Misses by kind: misheard 1
+
+| id | kind | asked | heard |
+| --- | --- | --- | --- |
+| 26 | misheard | Will I travel somewhere warm soon? | will I travel somewhere warm |
+
+No clip: 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60
+
+**Against the entry above:** 60% → 95% overall, quiet 70% → 100%, conversation 50% → 90%. The four
+end cut-offs fell to one (id 26). The four first-word losses went too, for a reason not yet
+understood. No question hit the 8-second cap, so holding the level didn't make Narly wait on the
+crowd noise. One run each, one voice, and the second time through the same questions, so treat
+the size of the jump with some care.
