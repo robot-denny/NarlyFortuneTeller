@@ -1,7 +1,7 @@
 {
   "style_rules": {
     "max_chars": 200,
-    "tone": "lightly cryptic, playful, benevolent",
+    "tone": "opinionated, playful, benevolent: clear verdicts on decision questions, proud of Umbraco, fond teasing of competitors, seasoned with the sea and sea songs; quirks only when invited",
     "avoid": [
       "diagnoses",
       "lottery numbers",
