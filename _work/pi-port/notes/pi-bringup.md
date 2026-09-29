@@ -244,7 +244,8 @@ whether the re-check passed.
   alone did not fix it: `deploy/mic_check.py` showed the recording was garbled and sped up at
   **44,100 Hz** (the mic library's default), and clear at 16,000 and 48,000 Hz, whatever the chunk
   size. **Fix 2:** on Linux the mic is opened at 16,000 Hz (`choose_mic_rate`, overridable with
-  `MIC_SAMPLE_RATE`). The laptop keeps its own default. Re-check: pending.
+  `MIC_SAMPLE_RATE`). The laptop keeps its own default. Re-check: **passed**, three coins in a row
+  all `outcome=heard` (6.3–7.4 s), with LEDs for each (item 6).
 - **Item 6 evidence: the first coin is a real one on the Pi too.** `Ready!` at 10:13:22, then
   nothing until the owner's coin at 10:14:05, which was dropped as `Ignoring first coin signal`.
   The same happened at 10:27:35. No spurious start-up coin was seen on either machine, so the
@@ -252,3 +253,9 @@ whether the re-check passed.
 - **Noise, not a fault:** each time the mic opens, the log fills with `ALSA lib … Unknown PCM …`
   and `jack server is not running` lines. That is the mic library probing every device. Worth
   hiding later. It doesn't affect anything.
+- **Persona: a mishearing got quoted on the ticket.** "What do you think of Umbraco 18" was heard
+  as "what do you think of a broccoli team". Narly worked out it meant Umbraco, but quoted
+  "broccoli team" first, which breaks the persona's rule. "broccoli" wasn't in its list of
+  Umbraco sound-alikes. **Fix:** added `broccoli, a broccoli, broccoli team` to that list in
+  `personas/umbraco-2026/prompts.md`. Re-check: ask the same question on the Pi after `git pull`
+  and `sudo systemctl restart narly`.
