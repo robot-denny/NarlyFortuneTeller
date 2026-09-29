@@ -16,11 +16,11 @@ hitting it is not the goal of any one increment.
 the runbook `docs/capture-baseline.md`, and the 60-question script. Full hardware run on the Mac
 confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/live-baseline/spec.md`.
 
-- Remaining: one measuring session, scaled down on 2026-09-28 to what the owner can run alone
-  before the event: 20 questions, ids 1–10 quiet and 21–30 with crowd noise, on the laptop with
-  the AM8. No leaning block. Fixed setup, noted once. Results go in the runbook's results section,
-  marked "solo, owner's voice".
-- Held until that score is in: the one-line threshold fix for mid-sentence cut-offs
+- Measuring session done 2026-09-28, scaled down to what the owner could run alone: 20
+  questions, ids 1–10 quiet and 21–30 with crowd noise, on the laptop with the AM8. **60% heard
+  correctly** (quiet 70%, conversation 50%); replay identical. All eight misses were clipped
+  first or last words, not mishearing. Results in `docs/capture-baseline.md`.
+- Next measured change, now that the score is in: the one-line threshold fix for mid-sentence cut-offs
   (`dynamic_energy_threshold = False` after calibration). A replay can't test it, because the
   clips already stop where Narly stopped listening; it needs a second live run of the same 20.
 
