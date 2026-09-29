@@ -85,6 +85,18 @@ score as a miss. This rule is only for the session. Attendees can say anything.
 **If a volunteer goes off script**, type the same id again at the next prompt and ask again. Only
 the last try counts.
 
+### Running it alone: the 20-question session
+
+With no volunteers, run a shorter session yourself: ids **1 to 10** in quiet, then ids **21 to 30**
+with the crowd noise playing. Skip the leaning block. Type each id as usual. The scoring counts
+only the questions you asked, and the replay's `No clip:` line lists the other 40, which is
+expected. Use ids 21 to 30 for the noise block, not 11 to 20: the script marks each id's condition,
+so 11 to 20 would be scored as quiet.
+
+Judge the chime yourself from the attendee's spot. In the results entry, write "solo, owner's
+voice" under **Anything unusual**. You know the questions, so the score runs higher than
+strangers would get. It still compares fairly with a later solo session, such as one on the Pi.
+
 ### The three conditions
 
 - **Quiet (ids 1 to 20).** No crowd noise. The volunteer stands where an attendee would.
@@ -187,3 +199,78 @@ paste the two blocks the scoring commands printed.
 ```
 
 <!-- New entries go below this line, oldest first. -->
+
+### 2026-09-28, home office, the laptop
+
+**Setup**
+
+- Mic: Fifine AM8. Front right of the cabinet, against the front and side lip, tilted slightly
+  toward the centre. Aimed at the face of someone standing about 2.5 ft back, facing the cabinet,
+  upright after leaning in to drop the coin. Distance to the speaker: about shoulder-to-wrist.
+  Top edge about 8 in below the speaker's face, angled up toward it.
+- Gain knob: about 1 o'clock. Monitor/headphone knob: 12 o'clock (doesn't affect the recording).
+- Mac input checked as the AM8: yes
+- Crowd noise: Spotify, "Essential Sound Effects: People Talking in Background (v2) Crowd Group
+  People Talk Talking Chat Chatting Mingle Mingling Lobby". iPhone volume 70%, through a Bose
+  speaker 3.5 ft behind the speaker and 2.5 ft to their left, at torso height (on the desk).
+- Volunteers: none; the owner alone.
+
+**Conditions**
+
+- Quiet: ids 1–10
+- Conversation: ids 21–30 (same 10 questions as 1–10)
+- Leaning: not run
+- Anything unusual: solo, owner's voice (knew the questions)
+
+**Live**
+
+- Heard correctly overall: 60% (12 of 20)
+- quiet: 70% (7 of 10)
+- conversation: 50% (5 of 10)
+- Unreachable (recognizer_error, left out of the shares): 0
+- Hit the 8-second cap: 0
+- Misses by kind: misheard 8
+
+| id | kind | asked | heard |
+| --- | --- | --- | --- |
+| 4 | misheard | Is love waiting around the corner? | is love waiting around the |
+| 6 | misheard | Will I travel somewhere warm soon? | I travel somewhere warm soon |
+| 7 | misheard | What does the ocean hold for me? | what does the ocean hold for |
+| 21 | misheard | Will I find treasure today? | find treasure today |
+| 24 | misheard | Is love waiting around the corner? | waiting around the corner |
+| 26 | misheard | Will I travel somewhere warm soon? | will I travel somewhere warm |
+| 27 | misheard | What does the ocean hold for me? | what does the ocean |
+| 29 | misheard | Should I learn to play guitar? | I learn to play guitar |
+
+**Replay**
+
+- Heard correctly overall: 60% (12 of 20)
+- quiet: 70% (7 of 10)
+- conversation: 50% (5 of 10)
+- Unreachable (recognizer_error, left out of the shares): 0
+- Hit the 8-second cap: 0
+- Misses by kind: misheard 8
+
+| id | kind | asked | heard |
+| --- | --- | --- | --- |
+| 4 | misheard | Is love waiting around the corner? | is love waiting around the |
+| 6 | misheard | Will I travel somewhere warm soon? | I travel somewhere warm soon |
+| 7 | misheard | What does the ocean hold for me? | what does the ocean hold for |
+| 21 | misheard | Will I find treasure today? | find treasure today |
+| 24 | misheard | Is love waiting around the corner? | waiting around the corner |
+| 26 | misheard | Will I travel somewhere warm soon? | will I travel somewhere warm |
+| 27 | misheard | What does the ocean hold for me? | what does the ocean |
+| 29 | misheard | Should I learn to play guitar? | I learn to play guitar |
+
+No clip: 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60
+
+**Chime over conversation:** audible
+
+**Early wake-ups noted:** none noticed. The owner didn't notice any cut-offs in the moment either,
+though the log shows eight.
+
+**What the misses show:** all eight are clipped questions, not misheard ones. Google got every
+word it was given right. Four lost the last word or two (ids 4, 7, 26, 27), four lost the first
+word (ids 6, 21, 24, 29). The replay matches the live score miss for miss, so a different
+recognizer wouldn't change these; when Narly starts and stops recording would. The end cut-offs
+are what the held `dynamic_energy_threshold` fix targets.
