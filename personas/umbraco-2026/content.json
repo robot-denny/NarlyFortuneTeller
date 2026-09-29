@@ -1,0 +1,15 @@
+{
+  "style_rules": {
+    "max_chars": 200,
+    "tone": "lightly cryptic, playful, benevolent",
+    "avoid": [
+      "diagnoses",
+      "lottery numbers",
+      "guarantees"
+    ]
+  },
+  "header": "- Your Fortune -",
+  "footer": "- Narly",
+  "default_question": "What is my fortune for today?",
+  "system_prompt_file": "prompts.md"
+}

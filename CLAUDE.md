@@ -34,7 +34,7 @@ A coin-operated AI fortune teller for festivals. Physical pipeline: Coin → Mic
 - They cover the hardware-free paths only. The mic, Arduino, and printer are checked by hand.
 
 ## Personas
-Live in `personas/<name>/content.json` + `prompts.md`. Current personas: `default` (general), `music`, `umbraco-2025` (Umbraco festival). Default persona is always the fallback.
+Live in `personas/<name>/content.json` + `prompts.md`. Current personas: `default` (general), `music`, `umbraco-2025` (Umbraco festival), `umbraco-2026` (copy of `default`, to be customised). Default persona is always the fallback.
 
 ## Arduino serial protocol
 - Arduino → Python: `COIN X` (coin inserted)
