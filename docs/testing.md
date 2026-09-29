@@ -259,6 +259,38 @@ If you stay silent at a quiet desk, Narly logs `not_understood`, not `no_speech`
 and not a fault. In a quiet room, Narly's listening level drops until the microphone's own faint
 hiss counts as someone starting to speak. Festival rooms are never that quiet.
 
+### Testing with the real printer
+
+This is hardware testing for the owner too. Narly sends each ticket straight to the thermal
+printer over USB, using the printer IDs in `.env`. It doesn't use your computer's list of printers,
+so you don't need to add the printer there.
+
+Direct USB needs one extra library. On a Mac with Homebrew:
+
+```bash
+brew install libusb
+```
+
+On Linux or a Raspberry Pi:
+
+```bash
+sudo apt install libusb-1.0-0
+```
+
+Plug the printer in, switch it on, and print one test line. This uses no coin, microphone, or
+OpenAI key:
+
+```bash
+.venv/bin/python -c "from dotenv import load_dotenv; load_dotenv(); from print_client import _print_via_escpos; _print_via_escpos('Narly test')"
+```
+
+A short ticket saying "Narly test" should come out and cut. If nothing comes out and there's no
+error, check the paper. Thermal paper prints on one side only: the side that darkens when you
+scratch it with a fingernail faces the print head.
+
+Keep the `load_dotenv()` part of the command. Without it, Narly doesn't read `.env` and quietly
+sends the test to your computer's default printer instead.
+
 ## Read the log
 
 Every fortune writes two lines that say how listening went. The first line says what happened:
