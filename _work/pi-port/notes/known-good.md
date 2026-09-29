@@ -9,7 +9,8 @@ Step 1 of `_work/pi-port/plan.md`.
 
 ## Going back to it on the laptop
 
-From `/Users/dkardys/Sites/fortune-service`:
+From `/Users/dkardys/Sites/fortune-service`. Commit or stash any changes first (`git stash`), or
+`git switch` refuses to run:
 
 ```
 git fetch --tags

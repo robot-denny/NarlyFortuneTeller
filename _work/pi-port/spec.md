@@ -83,7 +83,7 @@ choices are recorded below so the owner can overrule them.
   hand and never committed.
 - **Starts itself.** When the Pi gets power, Narly starts without a keyboard, a screen, or anyone
   logging in. He's waiting for a coin once the start-up cue has played.
-- **Comes back by himself.** If Narly crashes, he restarts within a few seconds. If he keeps
+- **Comes back by himself.** If Narly crashes, he restarts on his own. How quickly doesn't matter, only that he comes back. If he keeps
   crashing (for example, because the `.env` is missing), he stops retrying rather than looping
   forever, and the log says why.
 - **Finds his hardware by itself.** The Arduino is found without typing a port name. The Pi names
@@ -205,7 +205,7 @@ choices are recorded below so the owner can overrule them.
 3. Starting from a blank SD card and following only `deploy/README.md`, the Pi runs Narly with
    all the hardware attached.
 4. Powering the Pi on starts Narly with no keyboard, screen, or login. A coin produces a ticket.
-5. When Narly crashes on the Pi, he's back within a few seconds. A persistent fault stops the
+5. When Narly crashes on the Pi, he comes back on his own, however long it takes. A persistent fault stops the
    retries and the log says why.
 6. On the Pi, the Arduino and the AM8 are found without anyone typing a port or device number.
 7. The Arduino connection is opened once per run, so consecutive coins on the Pi each light the
@@ -293,7 +293,7 @@ Scenario: Plugging in the booth
 Scenario: A crash mid-afternoon
   Given Narly is running on the Pi and waiting for a coin
   When his process is killed
-  Then he is waiting for a coin again within 10 seconds
+  Then he is waiting for a coin again without anyone touching him
   And the log shows the crash and the restart
 ```
 

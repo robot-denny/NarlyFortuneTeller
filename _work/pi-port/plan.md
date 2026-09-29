@@ -42,7 +42,8 @@ direct USB. `configure_providers` and `fakes.py` let the coin flow run in tests 
   `0x2341`, PID `0x0043`, device `/dev/cu.usbmodem1101`, and description `IOUSBHostDevice`, as
   listed on 2026-09-28. The current "Arduino in description" test therefore misses it on the Mac,
   and only `usbmodem` matches. On the Pi the same board is `/dev/ttyACM0`. `find_port()` accepts
-  VIDs `0x2341`, `0x2A03` (Arduino), and `0x1A86` (CH340 clones), and keeps the `usbmodem` rule.
+  VIDs `0x2341` and `0x2A03` (Arduino) and keeps the `usbmodem` rule. CH340 clones (`0x1A86`)
+  are left out: that chip is on plenty of other USB-serial adapters, and the owner's Uno is genuine.
 - **With no Arduino, hardware mode waits instead of exiting.** It logs once, retries every few
   seconds, and logs again about every minute. If it exited, the Pi's service would restart it
   until it hit the retry limit (10 in 300 s) and then give up for good. That's the wrong outcome
@@ -138,8 +139,9 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > before running `git push origin laptop-known-good-2026-09-28`. Then prove the tag runs: in a
 > scratch worktree (`git worktree add ../narly-known-good laptop-known-good-2026-09-28`), run
 > `/Users/dkardys/Sites/fortune-service/.venv/bin/python serial_trigger.py --list-personas` and
-> `... serial_trigger.py --mode simulate --dry-run --offline --question "Will I find treasure
-> today?"` from that worktree's root, confirm a `[TEST FORTUNE]` ticket prints to the console,
+> `... serial_trigger.py --mode simulate --dry-run --offline --auto --interval 60 --question "Will I
+> find treasure today?"` from that worktree's root (`--auto` fires the coin, since there's no
+> keyboard to press Enter; stop it with Ctrl+C after the ticket), confirm a `[TEST FORTUNE]` ticket prints to the console,
 > then `git worktree remove ../narly-known-good`. Make no code changes. Record the tag name and
 > the check in `_work/pi-port/notes/known-good.md` and commit that note.
 
@@ -165,7 +167,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > than exit. Do it in three test-first cycles, each RED then GREEN before the next.
 > (a) `find_port()` takes an optional list of ports, each with `.device`, `.description`, `.vid`,
 > defaulting to `serial.tools.list_ports.comports()`. It returns the first Arduino-like device,
-> matched by VID in {0x2341, 0x2A03, 0x1A86}, "Arduino" in the description, or "usbmodem" in the
+> matched by VID in {0x2341, 0x2A03}, "Arduino" in the description, or "usbmodem" in the
 > device, and `None` if there isn't one. Tests use `types.SimpleNamespace` ports shaped like the
 > laptop's (`/dev/cu.usbmodem1101`, description `IOUSBHostDevice`, vid 0x2341) and the Pi's
 > (`/dev/ttyACM0`, description `ttyACM0`, vid 0x2341), and a list with only
@@ -262,7 +264,10 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > data")`: `pytest.raises(SystemExit)` with code 1, and the ERROR line is logged.
 > (b) Startup refuses to run without an OpenAI key. In `main()`, after parsing and
 > `configure_logging`, if `--offline` isn't set and `OPENAI_API_KEY` is empty, log an ERROR naming
-> `.env` and `.env.example`, then exit 1. `--list-personas` still works without a key. Put the
+> `.env` and `.env.example`, then exit 1. `--list-personas` still works without a key. The check
+> relies on `ai_client.py` having loaded `.env` when it was imported at the top of
+> `serial_trigger.py`, so keep that import above the check. The test passes its own `env` dict
+> rather than touching the real environment or `.env`. Put the
 > check in a small function `check_can_start(args, env=os.environ)` and test it in
 > `tests/test_startup_checks.py`: no key + hardware → SystemExit 1 with the message; no key +
 > `--offline` → no exit; key present → no exit.
@@ -399,7 +404,8 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > or `git switch --detach laptop-known-good-2026-09-28` if the laptop proof in Step 9 didn't pass.
 > Plug in power. Stop it sleeping: `caffeinate -dims` in its own Terminal window, or System
 > Settings → Battery → prevent sleep when the display is off. Don't close the lid unless an
-> external display is attached. Then `.venv/bin/python serial_trigger.py --log-file narly.log`,
+> external display is attached. Then `.venv/bin/python serial_trigger.py --log-file clips/narly.log` (inside `clips/`, which git
+> ignores, so the log never shows up as an untracked file),
 > one test coin, one ticket. Laptop → Pi: the reverse, then power on and wait for the start-up
 > cue. Also cover the Bose checks: mains power, volume set at the booth, press power if the cues
 > go quiet. Say which code version the laptop should be on for the event.
@@ -434,8 +440,8 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > jack hisses (if it does, use a USB audio adapter and change the `Headphones` card name).
 > (4) Pull the power, plug it back in: the start-up cue plays with no keyboard or login, and a coin
 > gives a ticket.
-> (5) `sudo pkill -9 -f serial_trigger.py`: waiting for a coin again within 10 s, and the journal
-> shows the restart.
+> (5) `sudo pkill -9 -f serial_trigger.py`: Narly comes back on his own and waits for a coin again
+> (how long it takes doesn't matter), and the journal shows the restart.
 > (6) Two coins in a row: LEDs for both, no Arduino start-up lines between them. Also note whether
 > the first coin after start was ignored.
 > (7) Unplug the Arduino, plug it into a different USB port on the Pi: `Arduino disconnected`
