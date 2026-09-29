@@ -83,6 +83,12 @@ _config = None
 # Which input device the real microphone opens. None means the computer's
 # default input. main() sets it from MIC_NAME when the real mic is used.
 _mic_index = None
+_mic_rate = None     # sample rate to open the mic at; None = the mic's own default (set by main())
+
+# On the Pi, the mic library opens the mic at 44,100 Hz by default, and at that
+# rate the recording came out garbled and sped up (deploy/mic_check.py,
+# 2026-09-29). 16,000 Hz was clear, and it is what Google's recognizer works at.
+PI_MIC_RATE = 16000
 
 # ---- Module-level providers (set at startup by main(), or by a test) ----
 # These are the four things Narly needs that involve hardware or the network:
@@ -252,7 +258,7 @@ def mic_get_audio(on_ready, recognizer=None, mic=None):
     ones are created.
     """
     recognizer = recognizer or sr.Recognizer()
-    mic = mic or sr.Microphone(device_index=_mic_index)
+    mic = mic or sr.Microphone(device_index=_mic_index, sample_rate=_mic_rate)
 
     with mic as source:
         # Quick ambient noise calibration BEFORE the chime - the attendee
@@ -760,6 +766,21 @@ def check_can_start(args, env=os.environ):
         sys.exit(EXIT_CONFIG)
 
 
+def choose_mic_rate(env=os.environ, platform=sys.platform):
+    """The sample rate to open the mic at, or None for the mic's own default.
+
+    MIC_SAMPLE_RATE in .env wins on either machine. Otherwise the Pi (Linux)
+    uses PI_MIC_RATE, because its default of 44,100 Hz garbled the recording,
+    and the laptop (macOS) keeps its own default, the one the 95% baseline
+    was measured with.
+    """
+    if env.get("MIC_SAMPLE_RATE"):
+        return int(env["MIC_SAMPLE_RATE"])
+    if platform.startswith("linux"):
+        return PI_MIC_RATE
+    return None
+
+
 def choose_mic(env=os.environ):
     """Look up the mic named by MIC_NAME (default "fifine") and log the choice.
 
@@ -785,7 +806,7 @@ def choose_mic(env=os.environ):
     return index
 
 def main():
-    global LED_PORT, _config, _mic_index
+    global LED_PORT, _config, _mic_index, _mic_rate
 
     parser = build_parser()
     args = parser.parse_args()
@@ -825,6 +846,8 @@ def main():
     # even when it isn't the computer's default input.
     if not (args.clip or args.question or args.offline):
         _mic_index = choose_mic()
+        _mic_rate = choose_mic_rate()
+        log.info(f"Microphone sample rate: {_mic_rate or 'the mic default'}")
     configure_providers(get_audio, transcribe, fortune, PygameAudioOut())
 
     if args.mode == "hardware":

@@ -240,8 +240,11 @@ whether the re-check passed.
   clearly, but a recording made the way Narly opens the mic (`sr.Microphone(device_index=1)`,
   `fifine Microphone: USB Audio (hw:3,0)`, `rate 44100`) played back **garbled**. Cause: the raw
   `hw:` device, with nothing converting the rate. **Fix:** `deploy/asound.conf` adds `fifine_mic`
-  (plug to `hw:Microphone`), and `pick_mic_index` prefers a match without `(hw:` (tested). Re-check:
-  pending.
+  (plug to `hw:Microphone`), and `pick_mic_index` prefers a match without `(hw:` (tested). That
+  alone did not fix it: `deploy/mic_check.py` showed the recording was garbled and sped up at
+  **44,100 Hz** (the mic library's default), and clear at 16,000 and 48,000 Hz, whatever the chunk
+  size. **Fix 2:** on Linux the mic is opened at 16,000 Hz (`choose_mic_rate`, overridable with
+  `MIC_SAMPLE_RATE`). The laptop keeps its own default. Re-check: pending.
 - **Item 6 evidence: the first coin is a real one on the Pi too.** `Ready!` at 10:13:22, then
   nothing until the owner's coin at 10:14:05, which was dropped as `Ignoring first coin signal`.
   The same happened at 10:27:35. No spurious start-up coin was seen on either machine, so the

@@ -25,8 +25,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import speech_recognition as sr  # noqa: E402
 import serial_trigger  # noqa: E402
 
-# (sample rate, chunk size). 44100/1024 is what Narly uses today.
-SETTINGS = [(44100, 1024), (16000, 1024), (16000, 4096), (48000, 1024), (48000, 4096)]
+# (sample rate, chunk size). The first is what Narly itself uses (serial_trigger.choose_mic_rate:
+# 16000 on the Pi; None, the mic's own default, on the laptop). 44100 garbled the Pi's recording.
+SETTINGS = [(serial_trigger.choose_mic_rate(), 1024), (44100, 1024), (16000, 4096), (48000, 1024)]
 SECONDS = 4
 
 
@@ -42,7 +43,7 @@ def main():
         try:
             mic = sr.Microphone(device_index=index, sample_rate=rate, chunk_size=chunk)
             with mic as source:
-                print(f"rate {rate}, chunk {chunk}: get ready...", flush=True)
+                print(f"rate {rate or 'mic default'}, chunk {chunk}: get ready...", flush=True)
                 time.sleep(2)
                 print("   SPEAK NOW", flush=True)
                 audio = sr.Recognizer().record(source, duration=SECONDS)

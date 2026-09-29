@@ -37,7 +37,7 @@ def test_the_real_mic_provider_opens_the_chosen_device(monkeypatch):
     opened = []
 
     class RecordingMicrophone:
-        def __init__(self, device_index=None):
+        def __init__(self, device_index=None, sample_rate=None):
             opened.append(device_index)
 
         def __enter__(self):
@@ -91,3 +91,48 @@ def test_on_the_pi_the_converting_mic_is_preferred_over_the_raw_device():
 def test_the_raw_device_is_still_used_when_it_is_the_only_match():
     names = ["bcm2835 Headphones: - (hw:0,0)", "fifine Microphone: USB Audio (hw:3,0)", "default"]
     assert serial_trigger.pick_mic_index(names, "fifine") == 1
+
+
+# ---- The sample rate ----
+#
+# On the Pi, the mic library opens the mic at 44,100 Hz unless told otherwise,
+# and at that rate the recording came out garbled and sped up (tested
+# 2026-09-29 with deploy/mic_check.py). At 16,000 and 48,000 Hz it was clear.
+# The laptop keeps its own default, the one the 95% baseline used.
+
+
+def test_on_the_pi_the_mic_is_opened_at_16000_hz():
+    assert serial_trigger.choose_mic_rate(env={}, platform="linux") == 16000
+
+
+def test_on_the_laptop_the_mic_keeps_its_own_default_rate():
+    assert serial_trigger.choose_mic_rate(env={}, platform="darwin") is None
+
+
+def test_mic_sample_rate_in_env_overrides_the_rate_on_either_machine():
+    assert serial_trigger.choose_mic_rate(env={"MIC_SAMPLE_RATE": "48000"}, platform="linux") == 48000
+    assert serial_trigger.choose_mic_rate(env={"MIC_SAMPLE_RATE": "48000"}, platform="darwin") == 48000
+
+
+def test_the_real_mic_provider_opens_the_chosen_rate(monkeypatch):
+    opened = []
+
+    class RecordingMicrophone:
+        def __init__(self, device_index=None, sample_rate=None):
+            opened.append(sample_rate)
+
+        def __enter__(self):
+            raise RuntimeError("stand-in mic, nothing to record")
+
+        def __exit__(self, *exc):
+            return False
+
+    monkeypatch.setattr(serial_trigger.sr, "Microphone", RecordingMicrophone)
+    monkeypatch.setattr(serial_trigger, "_mic_rate", 16000, raising=False)
+
+    try:
+        serial_trigger.mic_get_audio(on_ready=lambda: None)
+    except RuntimeError:
+        pass
+
+    assert opened == [16000]
