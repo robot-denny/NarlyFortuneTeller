@@ -261,3 +261,20 @@ whether the re-check passed.
   answered about Umbraco 18. (One try before that caught only "what do you think". The end of the
   question was cut off, and it got a generic fortune. That's the known end-of-question cut-off, for
   the Step 9 session to measure, not the persona.)
+- **Items 2, 5, 7, 8, 11: passed** (2026-09-29). `systemd-analyze verify` printed nothing. A
+  `kill -9` came back by itself. An unplugged Arduino, moved to a different USB port, logged
+  `Arduino disconnected`, restarted, waited, found `/dev/ttyACM0`, and a coin gave a ticket. With
+  `.env` moved away, it exited with `status=78/CONFIG`, logged `No OPENAI_API_KEY found`, and did
+  not restart. `throttled=0x0` after a print.
+- **Item 4: passed.** After the power was pulled, the ready cue played by itself, and the second
+  coin gave a ticket (the first was the known skip).
+- **Item 9: failed first time: the log didn't survive the power cut.** `journalctl -b -1` said `no
+  persistent journal was found`, and `/var/log/journal` was empty. Raspberry Pi OS sets
+  `Storage=volatile` in its main `journald.conf`. Our drop-in (`Storage=persistent`) does come
+  later, but the setup script only restarted journald, and the log stayed in memory.
+  `sudo systemctl restart systemd-journald && sudo journalctl --flush` made the machine-id folder
+  appear. **Fix:** the setup script now flushes, then checks the folder isn't empty and warns if it
+  is. Re-check: redo the power test.
+- **Side note: the Pi's clock starts two weeks in the past.** There's no battery clock, so it boots
+  on a saved old time (`since … Sep 14` in `systemctl status`) and corrects itself once online.
+  Timestamps early in a boot can be wrong. Worth knowing when reading logs after an event.

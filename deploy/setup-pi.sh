@@ -134,6 +134,14 @@ say "4c. Keeping the log on the SD card and writing it every 15 s (journald)"
 sudo mkdir -p /etc/systemd/journald.conf.d /var/log/journal
 sudo install -m 0644 "$REPO_DIR/deploy/journald-narly.conf" /etc/systemd/journald.conf.d/narly.conf
 sudo systemctl restart systemd-journald
+# Restarting isn't enough: the log stays in memory until it is told to "flush" to the card.
+# Without this, the first power cut after setup wiped the whole log (tested 2026-09-29).
+sudo journalctl --flush
+if sudo test -n "$(sudo ls -A /var/log/journal 2>/dev/null)"; then
+    echo "    The log is now kept on the SD card."
+else
+    warn "The log is still only in memory, so a power cut would lose it. See deploy/README.md."
+fi
 
 # --- 5. The service ----------------------------------------------------------------------
 # Fill in the template's placeholders and install it. "enable" means "start on power-up";
