@@ -129,6 +129,14 @@ Scenario: Narly adjusts to the room rather than a fixed setting
   Then Narly still begins recording
 ```
 
+```scenario
+Scenario: A question that ends softly is heard to the end
+  Given Narly measured the room when the coin dropped
+  When an attendee's voice drops on the last word of the question
+  Then Narly keeps recording until the attendee actually stops
+  And the last word is in what Narly heard
+```
+
 ### Rule: A question Narly hears is the question the fortune answers
 
 ```scenario
@@ -350,7 +358,8 @@ Scenario: Silence at a quiet desk
   And the fortune run continues with the substituted question
 ```
 
-*Measured 2026-09-28:* with adaptation on, the threshold falls to about 1.5 times the mic's hiss
+*Not re-measured since the level has been held while listening (2026-09-28); silence may now
+be recorded as "nothing heard" instead.* *Measured 2026-09-28:* with adaptation on, the threshold falls to about 1.5 times the mic's hiss
 within about 2.4 seconds, and the hiss then trips it. A festival hall is never this quiet. The
 endpointing-and-recognition increment replaces the threshold.
 
@@ -415,7 +424,8 @@ Scenario: A log file that can't be written doesn't stop Narly
 | An attendee who speaks as the chime ends is heard from the first word | — (manual: first word heard with the AM8, 2026-09-28; the order behind it is `tests/test_sequencing.py:L61`) | Not covered |
 | The thinking cue follows once the question is captured | `tests/test_audio_out.py:L32` | Covered |
 | A normal speaking voice is enough | — (manual: arm's-length check with the AM8, Step 8) | Not covered |
-| Narly adjusts to the room rather than a fixed setting | — (`tests/test_sequencing.py:L69` asserts adaptation is left on; a changing room is unmeasured until the live baseline) | Not covered |
+| Narly adjusts to the room rather than a fixed setting | — (`tests/test_sequencing.py:L69` asserts the measurement is kept; the room is measured on every coin; a room changing through the day is unmeasured) | Not covered |
+| A question that ends softly is heard to the end | — (`tests/test_sequencing.py:L69` asserts the level is held while listening; manual: baseline rerun 2026-09-28, end cut-offs 4 → 1 in 20) | Not covered |
 | A clearly spoken question is used and recorded | `tests/test_on_coin_event.py:L65` | Covered |
 | Silence is replaced with Narly's own question | `tests/test_on_coin_event.py:L37` | Covered |
 | An unintelligible answer is replaced the same way | `tests/test_on_coin_event.py:L87` | Covered |
@@ -506,3 +516,9 @@ are checked on the Pi in the Pi-port increment.
     and coin-line-order scenarios gained full-run tests at review, so all five failure kinds are
     proved end to end. The hardware-only scenarios name
     their manual check. Quiet-desk silence logs "not understood", as measured on 2026-09-28.
+- 2026-09-28: **The wake level is held while listening.** Narly still measures the room on every
+  coin, but it no longer raises the level mid-question. Adapting had cut off softer last words.
+  In the first baseline (20 solo questions on the laptop) that cost 4 of 8 misses; with the level
+  held, the same 20 scored 95% against 60%, with one end cut-off left. The four first-word losses
+  went too, for a reason not yet understood. Added the "ends softly"
+  scenario. The quiet-desk silence note is unverified since this change.

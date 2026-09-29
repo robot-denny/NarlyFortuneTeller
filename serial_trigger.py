@@ -126,8 +126,10 @@ def mic_get_audio(on_ready, recognizer=None, mic=None):
     very next line after the chime ends, because that is when attendees start
     talking. (Listening during the chime would record the chime as speech.)
 
-    The wake threshold is left at the speech library's default (300, adapting
-    to the room as it goes).
+    The wake threshold starts at the speech library's default (300) and is set
+    from the room by the calibration. It is then held for the question: left
+    adapting, it climbed toward the speaker's own loudness mid-sentence, so a
+    softer last word counted as the pause and was cut off.
 
     The microphone is created INSIDE this function on purpose: if PyAudio is
     missing, `sr.Microphone()` raises here, inside the capture stage, and is
@@ -144,6 +146,7 @@ def mic_get_audio(on_ready, recognizer=None, mic=None):
         # Quick ambient noise calibration BEFORE the chime - the attendee
         # hasn't been cued yet, so nothing they say is missed
         recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        recognizer.dynamic_energy_threshold = False  # hold the room's level for the question
         recognizer.pause_threshold = 1.5  # Allow pauses while thinking through question
         log.info("  🎤 Calibrated — chime, then listening for question...")
 

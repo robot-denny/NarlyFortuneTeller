@@ -20,9 +20,9 @@ confirmed 2026-09-28 (coin → LEDs → mic → printer, PR #3). Spec: `_work/li
   questions, ids 1–10 quiet and 21–30 with crowd noise, on the laptop with the AM8. **60% heard
   correctly** (quiet 70%, conversation 50%); replay identical. All eight misses were clipped
   first or last words, not mishearing. Results in `docs/capture-baseline.md`.
-- Next measured change, now that the score is in: the one-line threshold fix for mid-sentence cut-offs
-  (`dynamic_energy_threshold = False` after calibration). A replay can't test it, because the
-  clips already stop where Narly stopped listening; it needs a second live run of the same 20.
+- Wake level held while listening (`dynamic_energy_threshold = False` after calibration),
+  measured the same evening with the same 20: **95%** (quiet 100%, conversation 90%), one end
+  cut-off left. Results in `docs/capture-baseline.md`.
 
 ## Next
 
